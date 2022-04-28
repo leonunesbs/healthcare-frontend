@@ -27,16 +27,30 @@
     ]
   },
   "dependencies": {
+    "@apollo/client": "3.6.0",
+    "@chakra-ui/react": "1.8.8",
+    "@emotion/react": "^11",
+    "@emotion/styled": "^11",
+    "@uiw/react-md-editor": "3.6.0",
+    "framer-motion": "^6",
+    "graphql": "16.4.0",
+    "install": "0.13.0",
+    "katex": "0.15.3",
     "next": "12.1.5",
-    "react": "18.0.0",
-    "react-dom": "18.0.0"
+    "next-remove-imports": "1.0.6",
+    "react": "17.0.0",
+    "react-dom": "17.0.0",
+    "react-icons": "4.3.1"
   },
   "devDependencies": {
     "@commitlint/cli": "16.2.3",
     "@commitlint/config-conventional": "16.2.1",
+    "@types/katex": "0.14.0",
+    "@types/mermaid": "8.2.9",
     "@types/node": "16.11.27",
     "@types/react": "18.0.6",
     "@types/react-dom": "18.0.2",
+    "@types/react-icons": "3.0.0",
     "@typescript-eslint/eslint-plugin": "5.20.0",
     "@typescript-eslint/parser": "5.20.0",
     "commitizen": "4.2.4",

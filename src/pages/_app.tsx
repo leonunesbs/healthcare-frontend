@@ -1,6 +1,14 @@
+import { ApolloProvider } from '@apollo/client';
 import { AppProps } from 'next/app';
-import '@/styles/global.css';
+import { ChakraProvider } from '@chakra-ui/react';
+import client from '@/services/apollo-client';
 
 export default function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
+  return (
+    <ApolloProvider client={client}>
+      <ChakraProvider>
+        <Component {...pageProps} />
+      </ChakraProvider>
+    </ApolloProvider>
+  );
 }
