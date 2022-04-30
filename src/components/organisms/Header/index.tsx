@@ -1,4 +1,4 @@
-import { Box, BoxProps, Button, HStack, Stack } from '@chakra-ui/react';
+import { Box, BoxProps, Button, HStack, useColorMode } from '@chakra-ui/react';
 
 import { ReactNode } from 'react';
 import { useRouter } from 'next/router';
@@ -9,9 +9,10 @@ export interface HeaderProps extends BoxProps {
 
 const Header = ({ ...rest }: HeaderProps) => {
   const router = useRouter();
+  const { toggleColorMode } = useColorMode();
   return (
     <Box {...rest}>
-      <Stack direction={'row'}>
+      <HStack>
         <Box>Logo</Box>
         <HStack>
           <Button
@@ -29,7 +30,8 @@ const Header = ({ ...rest }: HeaderProps) => {
             Pacientes
           </Button>
         </HStack>
-      </Stack>
+        <Button onClick={toggleColorMode}>Luz</Button>
+      </HStack>
     </Box>
   );
 };

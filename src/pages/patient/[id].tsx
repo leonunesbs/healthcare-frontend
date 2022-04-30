@@ -4,6 +4,7 @@ import {
   Button,
   HStack,
   Heading,
+  Skeleton,
   Stack,
   Tab,
   TabList,
@@ -11,12 +12,12 @@ import {
   TabPanels,
   Tabs,
   Text,
+  useColorMode,
   useToast,
 } from '@chakra-ui/react';
-import { GetStaticPaths, GetStaticProps } from 'next';
-import { MdAdd, MdClose, MdEdit, MdSave } from 'react-icons/md';
-import { gql, useMutation } from '@apollo/client';
-import { useCallback, useState } from 'react';
+import { MdAdd, MdClose, MdEdit, MdPrint, MdSave } from 'react-icons/md';
+import { gql, useMutation, useQuery } from '@apollo/client';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import ChakraUIRenderer from 'chakra-ui-markdown-renderer';
 import { CustomMDEditor } from '@/components/atoms';
@@ -27,7 +28,8 @@ import { IService } from '@/interfaces/Service';
 import { IUnit } from '@/interfaces/Unit';
 import { Layout } from '@/components/templates';
 import ReactMarkdown from 'react-markdown';
-import client from '@/services/apollo-client';
+import { useReactToPrint } from 'react-to-print';
+import { useRouter } from 'next/router';
 
 const PATIENT_QUERY = gql`
   query ($id: ID) {
@@ -109,23 +111,40 @@ const CREATE_EVALUATION = gql`
   }
 `;
 
-interface PatientProps {
+interface PatientQueryData {
   patient: ExtendedPatient;
 }
 
-const Patient = ({ patient }: PatientProps) => {
+const Patient = () => {
+  const router = useRouter();
+  const { colorMode, setColorMode } = useColorMode();
+  const [initalColorMode] = useState(colorMode);
+  const { id } = router.query;
   const toast = useToast();
+  const contentRef = useRef(null);
+
+  const { data, loading, refetch } = useQuery<PatientQueryData>(PATIENT_QUERY);
+
+  const patient = data?.patient;
+
   const [value, setValue] = useState('');
   const [evaluate, setEvaluate] = useState(false);
-  const [evaluations, setEvaluations] = useState(patient.evaluations.edges);
+  const [evaluations, setEvaluations] = useState<any>();
   const [createEvaluation] = useMutation(CREATE_EVALUATION);
+
+  useEffect(() => {
+    refetch({
+      id: id as string,
+    });
+    setEvaluations(patient?.evaluations.edges);
+  }, [id, patient?.evaluations.edges, refetch]);
 
   const handleSaveEvaluation = useCallback(async () => {
     if (value) {
       await createEvaluation({
         variables: {
           serviceId: 'U2VydmljZU5vZGU6MQ==',
-          patientId: patient.id,
+          patientId: patient?.id,
           content: value,
         },
       })
@@ -176,29 +195,51 @@ const Patient = ({ patient }: PatientProps) => {
       });
     }
   }, [createEvaluation, evaluations, patient, toast, value]);
+
+  const handlePrint = useReactToPrint({
+    content: () => contentRef.current,
+    copyStyles: true,
+    onBeforeGetContent: () => setColorMode('light'),
+    onAfterPrint: () => setColorMode(initalColorMode),
+  });
+
   return (
-    <Layout title={patient?.fullName}>
+    <Layout title={(patient?.fullName as string) || 'Nome do paciente'}>
       <Stack>
         <Heading mt={12}>
           {patient?.fullName}
           <Badge fontSize={'xl'} ml={2} colorScheme="blue">
-            {patient?.age} anos
+            {patient?.age}
           </Badge>
         </Heading>
         <Tabs
           isFitted
           variant="enclosed"
-          bgColor="white"
-          p={4}
-          rounded="md"
-          shadow="md"
+          boxShadow={['base', 'md']}
+          borderRadius={{ base: 'none', sm: 'xl' }}
+          bgColor="rgb(255, 255, 255, 0.01)"
+          minH={'sm'}
         >
           <TabList mb="1em">
-            <Tab>Evolução</Tab>
-            <Tab>Prescrição</Tab>
+            <Tab
+              _selected={{
+                color: 'white',
+                bg: 'blue.500',
+              }}
+            >
+              Evolução
+            </Tab>
+            <Tab
+              _selected={{
+                color: 'white',
+                bg: 'blue.500',
+              }}
+            >
+              Prescrição
+            </Tab>
           </TabList>
           <TabPanels>
-            <TabPanel px={0}>
+            <TabPanel>
               <Stack spacing={4}>
                 {evaluate ? (
                   <Stack>
@@ -233,57 +274,80 @@ const Patient = ({ patient }: PatientProps) => {
                     </HStack>
                   </Stack>
                 )}
-                <Stack spacing={[2, 4]}>
-                  {evaluations?.map(({ node }) => (
-                    <Box
-                      key={node.id}
-                      boxShadow="base"
-                      rounded="md"
-                      px={[4, 6]}
-                      py={[6, 8]}
-                    >
-                      <Stack>
-                        <Heading as="h3" fontSize={'lg'}>
-                          {node.service.name}
-                        </Heading>
-                        <Text fontSize={'lg'}>
-                          <Badge colorScheme={'blue'} mr={2}>
-                            {node.colaborator.role}
-                          </Badge>
-                          {node.colaborator.fullName}
-                        </Text>
-                        <Stack spacing={0} fontSize="sm">
-                          <Text as="i">
-                            Data da consulta:{' '}
-                            {new Date(node.createdAt).toLocaleString()}
-                          </Text>
-                          <Text as="i">
-                            Ultima atualização:{' '}
-                            {new Date(node.createdAt).toLocaleString()}
-                          </Text>
-                        </Stack>
+                <Skeleton minH="150px" isLoaded={!loading}>
+                  <Stack spacing={[4, 6]}>
+                    {evaluations?.map(
+                      ({ node }: { node: ExtendedEvaulation }) => (
+                        <Box
+                          ref={contentRef}
+                          key={node.id}
+                          py={{ base: '2', sm: '8' }}
+                          px={{ base: '2', sm: '10' }}
+                          boxShadow={['base', 'md']}
+                          borderRadius={{ base: 'none', sm: 'xl' }}
+                          bgColor="rgb(255, 255, 255, 0.01)"
+                        >
+                          <Stack>
+                            <Heading as="h3" fontSize={'lg'}>
+                              {node.service.name}
+                            </Heading>
+                            <Text fontSize={'lg'}>
+                              <Badge colorScheme={'blue'} mr={2}>
+                                {node.colaborator.role}
+                              </Badge>
+                              {node.colaborator.fullName}
+                            </Text>
+                            <Stack spacing={0} fontSize="sm">
+                              <Text as="i">
+                                Data da consulta:{' '}
+                                {new Date(node.createdAt).toLocaleString(
+                                  'pt-BR',
+                                  {
+                                    dateStyle: 'short',
+                                    timeStyle: 'short',
+                                    timeZone: 'UTC',
+                                  },
+                                )}
+                              </Text>
+                              <Text as="i">
+                                Ultima atualização:{' '}
+                                {new Date(node.updatedAt).toLocaleString(
+                                  'pt-BR',
+                                  {
+                                    dateStyle: 'short',
+                                    timeStyle: 'short',
+                                    timeZone: 'UTC',
+                                  },
+                                )}
+                              </Text>
+                            </Stack>
 
-                        <Box py={6}>
-                          <ReactMarkdown
-                            components={ChakraUIRenderer()}
-                            skipHtml
-                          >
-                            {node.content}
-                          </ReactMarkdown>
+                            <Box py={6}>
+                              <ReactMarkdown components={ChakraUIRenderer()}>
+                                {node.content}
+                              </ReactMarkdown>
+                            </Box>
+                            <HStack justify={'flex-end'}>
+                              <Button
+                                colorScheme="gray"
+                                leftIcon={<MdPrint size="20px" />}
+                                onClick={handlePrint}
+                              >
+                                Imprimir
+                              </Button>
+                              <Button
+                                colorScheme="yellow"
+                                leftIcon={<MdEdit size="20px" />}
+                              >
+                                Editar
+                              </Button>
+                            </HStack>
+                          </Stack>
                         </Box>
-                        <HStack justify={'flex-end'}>
-                          <Button
-                            colorScheme="gray"
-                            leftIcon={<MdEdit size="25px" />}
-                            size="sm"
-                          >
-                            Editar
-                          </Button>
-                        </HStack>
-                      </Stack>
-                    </Box>
-                  ))}
-                </Stack>
+                      ),
+                    )}
+                  </Stack>
+                </Skeleton>
               </Stack>
             </TabPanel>
             <TabPanel>
@@ -294,76 +358,6 @@ const Patient = ({ patient }: PatientProps) => {
       </Stack>
     </Layout>
   );
-};
-
-interface PatientsData {
-  allPatients: {
-    edges: {
-      node: IPatient;
-    }[];
-  };
-}
-export const getStaticPaths: GetStaticPaths = async () => {
-  const { data }: { data: PatientsData } = await client.query({
-    query: gql`
-      query {
-        allPatients {
-          edges {
-            node {
-              id
-            }
-          }
-        }
-      }
-    `,
-  });
-
-  const paths = data.allPatients.edges.map(({ node }) => ({
-    params: { id: node.id },
-  }));
-
-  return {
-    paths,
-    fallback: true,
-  };
-};
-
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { id } = params as { id: string };
-
-  if (!id) {
-    return {
-      props: {
-        patient: null,
-      },
-      redirect: {
-        destination: '/',
-      },
-    };
-  }
-
-  const { data } = await client.query({
-    query: PATIENT_QUERY,
-    variables: { id: id as string },
-  });
-
-  if (data.patient == null) {
-    return {
-      props: {
-        patient: null,
-      },
-      redirect: {
-        destination: '/',
-      },
-    };
-  }
-
-  return {
-    props: {
-      patient: data.patient,
-    },
-    revalidate: 1,
-  };
 };
 
 export default Patient;

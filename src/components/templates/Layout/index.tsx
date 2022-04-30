@@ -31,7 +31,7 @@ const Layout = ({
           }
         />
       </Head>
-      <Box bgColor="gray.50" textColor={'gray.700'}>
+      <Box>
         <Container maxW="container.xl" px={[2, 6]}>
           {isHeaded && <Header />}
           <Box minH="100vh" maxW="8xl" mx="auto" m={0} p={0}>
