@@ -1,6 +1,7 @@
 import { Box, BoxProps, Button, HStack, useColorMode } from '@chakra-ui/react';
+import { ReactNode, useContext } from 'react';
 
-import { ReactNode } from 'react';
+import { AuthContext } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 
 export interface HeaderProps extends BoxProps {
@@ -9,6 +10,7 @@ export interface HeaderProps extends BoxProps {
 
 const Header = ({ ...rest }: HeaderProps) => {
   const router = useRouter();
+  const { signOut, isAuthenticated } = useContext(AuthContext);
   const { toggleColorMode } = useColorMode();
   return (
     <Box {...rest}>
@@ -31,6 +33,19 @@ const Header = ({ ...rest }: HeaderProps) => {
           </Button>
         </HStack>
         <Button onClick={toggleColorMode}>Luz</Button>
+        {isAuthenticated ? (
+          <Button variant="link" colorScheme="blue" onClick={signOut}>
+            Sair
+          </Button>
+        ) : (
+          <Button
+            variant="link"
+            colorScheme="blue"
+            onClick={() => router.push('/signin')}
+          >
+            Entrar
+          </Button>
+        )}
       </HStack>
     </Box>
   );

@@ -383,7 +383,7 @@ function Patients() {
                 {!data?.allPatients?.edges?.length && (
                   <Tr>
                     <Td colSpan={5}>
-                      <Text textAlign={'center'}>
+                      <Text>
                         Nenhum paciente encontrado.{' '}
                         <Button
                           variant={'link'}
