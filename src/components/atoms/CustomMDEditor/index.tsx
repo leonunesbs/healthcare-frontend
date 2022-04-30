@@ -4,6 +4,7 @@ import 'katex/dist/katex.css';
 
 import { Dispatch, SetStateAction, useCallback } from 'react';
 
+import { Code } from '@chakra-ui/react';
 import dynamic from 'next/dynamic';
 import katex from 'katex';
 
@@ -28,6 +29,7 @@ const CustomMDEditor = ({ value, setValue }: CustomMDEditorProps) => {
       textareaProps={{
         placeholder: 'Digite aqui...',
       }}
+      toolbarHeight={45}
       previewOptions={{
         components: {
           code: ({ inline, children = [], className }) => {
@@ -40,9 +42,9 @@ const CustomMDEditor = ({ value, setValue }: CustomMDEditorProps) => {
                     throwOnError: false,
                   },
                 );
-                return <code dangerouslySetInnerHTML={{ __html: html }} />;
+                return <Code dangerouslySetInnerHTML={{ __html: html }} />;
               }
-              return <code>{txt}</code>;
+              return <Code>{txt}</Code>;
             }
             if (
               typeof txt === 'string' &&
@@ -52,9 +54,9 @@ const CustomMDEditor = ({ value, setValue }: CustomMDEditorProps) => {
               const html = katex.renderToString(txt, {
                 throwOnError: false,
               });
-              return <code dangerouslySetInnerHTML={{ __html: html }} />;
+              return <Code dangerouslySetInnerHTML={{ __html: html }} />;
             }
-            return <code className={String(className)}>{txt}</code>;
+            return <Code className={String(className)}>{txt}</Code>;
           },
         },
       }}

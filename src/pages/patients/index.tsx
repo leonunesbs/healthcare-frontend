@@ -5,7 +5,13 @@ import {
   FormLabel,
   HStack,
   Input,
-  Skeleton,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
   Stack,
   Table,
   TableContainer,
@@ -15,11 +21,14 @@ import {
   Th,
   Thead,
   Tr,
+  useColorModeValue,
+  useDisclosure,
+  useToast,
 } from '@chakra-ui/react';
-import { MdAdd, MdSearch } from 'react-icons/md';
+import { MdAdd, MdClose, MdSave, MdSearch } from 'react-icons/md';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { gql, useQuery } from '@apollo/client';
-import { useCallback, useEffect } from 'react';
+import { gql, useMutation, useQuery } from '@apollo/client';
+import { useCallback, useState } from 'react';
 
 import { IEvaluation } from '@/interfaces/Evaluation';
 import { IPatient } from '@/interfaces/Patient';
@@ -27,8 +36,8 @@ import { Layout } from '@/components/templates';
 import { useRouter } from 'next/router';
 
 const PATIENTS_QUERY = gql`
-  query allPatients($fullName: String) {
-    allPatients(fullName_Icontains: $fullName) {
+  query allPatients($fullName: String, $first: Int) {
+    allPatients(fullName_Icontains: $fullName, first: $first, offset: 0) {
       edges {
         node {
           id
@@ -46,6 +55,34 @@ const PATIENTS_QUERY = gql`
             }
           }
         }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+`;
+
+const CREATE_PATIENT = gql`
+  mutation createPatient(
+    $fullName: String!
+    $birthDate: DateTime!
+    $email: String
+    $phone: String
+  ) {
+    createPatient(
+      fullName: $fullName
+      birthDate: $birthDate
+      email: $email
+      phone: $phone
+    ) {
+      created
+      patient {
+        id
+        fullName
       }
     }
   }
@@ -65,42 +102,119 @@ type PatientsQueryData = {
     edges: {
       node: PatientNode;
     }[];
+    pageInfo: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+      startCursor: string;
+      endCursor: string;
+    };
   };
 };
 
-type Inputs = {
+type SearchInputs = {
   fullName: string;
+};
+
+type CreatePatientInputs = {
+  fullName: string;
+  birthDate: string;
+  email?: string;
+  phone?: string;
 };
 
 function Patients() {
   const router = useRouter();
+  const toast = useToast();
   const { fullName } = router.query;
-  const { data, loading, refetch } =
-    useQuery<PatientsQueryData>(PATIENTS_QUERY);
+  const [fullNameState, setFullNameState] = useState<string>(
+    fullName as string,
+  );
+  const [first, setFirst] = useState(15);
+  const { register, handleSubmit } = useForm<SearchInputs>();
+  const createPatientForm = useForm<CreatePatientInputs>();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const { register, handleSubmit, setValue } = useForm<Inputs>();
-  console.log(data);
-  const searchSubmit: SubmitHandler<Inputs> = useCallback(
+  const inputVariant = useColorModeValue('floating-light', 'floating-dark');
+
+  const { data, refetch } = useQuery<PatientsQueryData>(PATIENTS_QUERY, {
+    variables: {
+      first: 15,
+    },
+  });
+
+  const [createPatient] = useMutation(CREATE_PATIENT);
+
+  const searchSubmit: SubmitHandler<SearchInputs> = useCallback(
     ({ fullName }) => {
-      router.replace({
-        pathname: '/patients',
-        query: { fullName },
-      });
+      setFullNameState(fullName);
+      if (!fullName) {
+        router.replace({
+          pathname: '/patients',
+        });
+      } else {
+        router.replace({
+          pathname: '/patients',
+          query: { fullName },
+        });
+      }
       refetch({
-        fullName: fullName,
+        fullName: fullName.toUpperCase(),
+        first,
       });
     },
-    [refetch, router],
+    [first, refetch, router],
   );
 
-  useEffect(() => {
-    if (fullName) {
-      setValue('fullName', fullName as string);
-      refetch({
-        fullName: fullName,
+  const handleCreatePatient: SubmitHandler<CreatePatientInputs> = useCallback(
+    async ({ fullName, birthDate, email, phone }) => {
+      await createPatient({
+        variables: {
+          fullName: fullName.toUpperCase(),
+          email: email?.toLowerCase(),
+          phone,
+          birthDate: new Date(
+            new Date(birthDate).toLocaleString('en-US', { timeZone: 'UTC' }),
+          ),
+        },
+      }).then(({ data }) => {
+        if (data?.createPatient?.created) {
+          toast({
+            title: 'Paciente criado',
+            description: 'Paciente criado com sucesso',
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+            position: 'top-right',
+          });
+
+          onClose();
+          refetch({
+            fullName: data?.createPatient?.patient.fullName.toUpperCase(),
+            first,
+          });
+        } else {
+          toast({
+            title: 'Atenção',
+            description: 'Paciente já existe',
+            status: 'warning',
+            duration: 9000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          router.push(`/patient/${data?.createPatient?.patient?.id}`);
+        }
       });
-    }
-  }, [fullName, refetch, setValue]);
+    },
+    [createPatient, first, onClose, refetch, router, toast],
+  );
+
+  const handleFetchMore = useCallback(async () => {
+    setFirst(first + 5);
+    refetch({
+      fullName: fullNameState.toUpperCase(),
+      first: first + 5,
+    });
+  }, [first, fullNameState, refetch]);
 
   return (
     <Layout title="Pacientes">
@@ -114,17 +228,94 @@ function Patients() {
         >
           <form onSubmit={handleSubmit(searchSubmit)}>
             <Stack>
-              <FormControl>
-                <FormLabel>Buscar paciente</FormLabel>
+              <FormControl variant={inputVariant}>
                 <Input
-                  pr="4.5rem"
                   type="text"
-                  placeholder="Nome do paciente"
-                  {...register('fullName')}
+                  placeholder=" "
+                  defaultValue={fullNameState as string}
+                  textTransform={'uppercase'}
+                  {...register('fullName', {
+                    onChange: handleSubmit(searchSubmit),
+                  })}
                 />
+                <FormLabel>Buscar paciente</FormLabel>
               </FormControl>
               <HStack justify={'flex-end'}>
-                <Button leftIcon={<MdAdd size="20px" />}>Novo Paciente</Button>
+                <Button leftIcon={<MdAdd size="20px" />} onClick={onOpen}>
+                  Novo Paciente
+                </Button>
+                <Modal isOpen={isOpen} onClose={onClose}>
+                  <ModalOverlay />
+                  <ModalContent
+                    bgColor={useColorModeValue('white', 'gray.800')}
+                  >
+                    <form
+                      onSubmit={createPatientForm.handleSubmit(
+                        handleCreatePatient,
+                      )}
+                    >
+                      <ModalHeader>Adicionar paciente</ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody pb={6}>
+                        <Stack spacing={6}>
+                          <FormControl variant={inputVariant} isRequired>
+                            <Input
+                              autoFocus
+                              required
+                              defaultValue={fullNameState}
+                              placeholder=" "
+                              textTransform={'uppercase'}
+                              {...createPatientForm.register('fullName')}
+                            />
+                            <FormLabel>Nome completo</FormLabel>
+                          </FormControl>
+                          <FormControl variant={inputVariant} isRequired>
+                            <Input
+                              type="date"
+                              required
+                              {...createPatientForm.register('birthDate')}
+                            />
+                            <FormLabel>Data de nascimento</FormLabel>
+                          </FormControl>
+                          <FormControl variant={inputVariant}>
+                            <Input
+                              placeholder=" "
+                              type="email"
+                              {...createPatientForm.register('email')}
+                            />
+                            <FormLabel>Email</FormLabel>
+                          </FormControl>
+                          <FormControl variant={inputVariant}>
+                            <Input
+                              placeholder=" "
+                              type="tel"
+                              {...createPatientForm.register('phone')}
+                            />
+                            <FormLabel>Celular</FormLabel>
+                          </FormControl>
+                        </Stack>
+                      </ModalBody>
+
+                      <ModalFooter>
+                        <HStack>
+                          <Button
+                            onClick={onClose}
+                            leftIcon={<MdClose size="20px" />}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type="submit"
+                            colorScheme="blue"
+                            leftIcon={<MdSave size="20px" />}
+                          >
+                            Salvar
+                          </Button>
+                        </HStack>
+                      </ModalFooter>
+                    </form>
+                  </ModalContent>
+                </Modal>
                 <Button
                   type="submit"
                   leftIcon={<MdSearch size="20px" />}
@@ -136,7 +327,7 @@ function Patients() {
             </Stack>
           </form>
         </Box>
-        <Skeleton isLoaded={!loading} minH="50px">
+        <Stack>
           <TableContainer
             py={{ base: '2', sm: '8' }}
             px={{ base: '2', sm: '10' }}
@@ -189,10 +380,37 @@ function Patients() {
                     </Td>
                   </Tr>
                 ))}
+                {!data?.allPatients?.edges?.length && (
+                  <Tr>
+                    <Td colSpan={5}>
+                      <Text textAlign={'center'}>
+                        Nenhum paciente encontrado.{' '}
+                        <Button
+                          variant={'link'}
+                          colorScheme="blue"
+                          onClick={onOpen}
+                        >
+                          Adicionar paciente
+                        </Button>
+                      </Text>
+                    </Td>
+                  </Tr>
+                )}
               </Tbody>
             </Table>
           </TableContainer>
-        </Skeleton>
+          <HStack justify={'center'}>
+            <Button
+              variant={'outline'}
+              colorScheme={'gray'}
+              leftIcon={<MdAdd size="20px" />}
+              onClick={handleFetchMore}
+              isDisabled={!data?.allPatients?.pageInfo?.hasNextPage}
+            >
+              Ver mais
+            </Button>
+          </HStack>
+        </Stack>
       </Stack>
     </Layout>
   );

@@ -3,4 +3,6 @@ export interface IPatient {
   fullName: string;
   birthDate: string;
   age: string;
+  email: string;
+  phone: string;
 }

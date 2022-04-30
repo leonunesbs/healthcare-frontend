@@ -2,8 +2,12 @@ import {
   Badge,
   Box,
   Button,
+  FormControl,
+  FormLabel,
   HStack,
   Heading,
+  IconButton,
+  Input,
   Skeleton,
   Stack,
   Tab,
@@ -13,9 +17,11 @@ import {
   Tabs,
   Text,
   useColorMode,
+  useColorModeValue,
   useToast,
 } from '@chakra-ui/react';
 import { MdAdd, MdClose, MdEdit, MdPrint, MdSave } from 'react-icons/md';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -111,6 +117,26 @@ const CREATE_EVALUATION = gql`
   }
 `;
 
+const UPDATE_PATIENT = gql`
+  mutation UpdatePatient(
+    $patientId: ID!
+    $fullName: String
+    $birthDate: DateTime
+    $email: String
+    $phone: String
+  ) {
+    updatePatient(
+      patientId: $patientId
+      fullName: $fullName
+      birthDate: $birthDate
+      email: $email
+      phone: $phone
+    ) {
+      updated
+    }
+  }
+`;
+
 interface PatientQueryData {
   patient: ExtendedPatient;
 }
@@ -119,6 +145,7 @@ const Patient = () => {
   const router = useRouter();
   const { colorMode, setColorMode } = useColorMode();
   const [initalColorMode] = useState(colorMode);
+  const [editName, setEditName] = useState(false);
   const { id } = router.query;
   const toast = useToast();
   const contentRef = useRef(null);
@@ -131,13 +158,18 @@ const Patient = () => {
   const [evaluate, setEvaluate] = useState(false);
   const [evaluations, setEvaluations] = useState<any>();
   const [createEvaluation] = useMutation(CREATE_EVALUATION);
+  const [updatePatient] = useMutation(UPDATE_PATIENT);
+
+  const editNameForm = useForm<{ fullName: string }>();
+
+  const inputVariant = useColorModeValue('floating-light', 'floating-dark');
 
   useEffect(() => {
     refetch({
       id: id as string,
     });
     setEvaluations(patient?.evaluations.edges);
-  }, [id, patient?.evaluations.edges, refetch]);
+  }, [id, patient, refetch]);
 
   const handleSaveEvaluation = useCallback(async () => {
     if (value) {
@@ -203,22 +235,108 @@ const Patient = () => {
     onAfterPrint: () => setColorMode(initalColorMode),
   });
 
+  const toggleEditName = useCallback(() => {
+    setEditName(!editName);
+  }, [editName]);
+
+  const handleEditName: SubmitHandler<{ fullName: string }> = useCallback(
+    async ({ fullName }) => {
+      await updatePatient({
+        variables: {
+          patientId: id,
+          fullName: fullName,
+        },
+      })
+        .then(({ data }) => {
+          if (data.updatePatient.updated) {
+            toast({
+              title: 'Dados atualizados com sucesso',
+              status: 'success',
+              duration: 9000,
+              isClosable: true,
+              position: 'top-right',
+            });
+            setEditName(false);
+            refetch({
+              id: id as string,
+            });
+          }
+        })
+        .catch((err) => {
+          toast({
+            title: 'Erro',
+            description: err.message,
+            status: 'error',
+            duration: 9000,
+            isClosable: true,
+            position: 'top-right',
+          });
+          setEditName(false);
+          editNameForm.reset();
+        });
+    },
+    [editNameForm, id, refetch, toast, updatePatient],
+  );
+
   return (
     <Layout title={(patient?.fullName as string) || 'Nome do paciente'}>
-      <Stack>
-        <Heading mt={12}>
-          {patient?.fullName}
-          <Badge fontSize={'xl'} ml={2} colorScheme="blue">
-            {patient?.age}
-          </Badge>
-        </Heading>
+      <Stack spacing={6}>
+        <form onSubmit={editNameForm.handleSubmit(handleEditName)}>
+          <HStack mt={12}>
+            {editName ? (
+              <Stack w="full" direction={['column', 'column', 'row']}>
+                <FormControl variant={inputVariant} isRequired>
+                  <Input
+                    defaultValue={patient?.fullName}
+                    required
+                    placeholder=" "
+                    textTransform={'uppercase'}
+                    {...editNameForm.register('fullName')}
+                  />
+                  <FormLabel>Editar nome</FormLabel>
+                </FormControl>
+                <HStack w={['full', 'full', 'initial']} justify="flex-end">
+                  <Button
+                    leftIcon={<MdClose size="20px" />}
+                    onClick={() => {
+                      editNameForm.reset();
+                      setEditName(false);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    colorScheme="blue"
+                    leftIcon={<MdSave size="20px" />}
+                  >
+                    Salvar
+                  </Button>
+                </HStack>
+              </Stack>
+            ) : (
+              <HStack justify={'space-between'} w="full">
+                <Heading>
+                  {patient?.fullName}
+                  <Badge fontSize={'xl'} ml={2} colorScheme="blue">
+                    {patient?.age}
+                  </Badge>
+                </Heading>
+                <IconButton
+                  aria-label="Editar nome"
+                  onClick={toggleEditName}
+                  icon={<MdEdit size="20px" />}
+                />
+              </HStack>
+            )}
+          </HStack>
+        </form>
         <Tabs
           isFitted
           variant="enclosed"
           boxShadow={['base', 'md']}
           borderRadius={{ base: 'none', sm: 'xl' }}
           bgColor="rgb(255, 255, 255, 0.01)"
-          minH={'sm'}
         >
           <TabList mb="1em">
             <Tab
@@ -274,7 +392,7 @@ const Patient = () => {
                     </HStack>
                   </Stack>
                 )}
-                <Skeleton minH="150px" isLoaded={!loading}>
+                <Skeleton isLoaded={!loading}>
                   <Stack spacing={[4, 6]}>
                     {evaluations?.map(
                       ({ node }: { node: ExtendedEvaulation }) => (
@@ -287,7 +405,7 @@ const Patient = () => {
                           borderRadius={{ base: 'none', sm: 'xl' }}
                           bgColor="rgb(255, 255, 255, 0.01)"
                         >
-                          <Stack>
+                          <Stack spacing={4}>
                             <Heading as="h3" fontSize={'lg'}>
                               {node.service.name}
                             </Heading>
@@ -322,13 +440,18 @@ const Patient = () => {
                               </Text>
                             </Stack>
 
-                            <Box py={6}>
+                            <Box
+                              p={4}
+                              boxShadow={['sm', 'base']}
+                              borderRadius={{ base: 'none', sm: 'xl' }}
+                            >
                               <ReactMarkdown components={ChakraUIRenderer()}>
                                 {node.content}
                               </ReactMarkdown>
                             </Box>
                             <HStack justify={'flex-end'}>
                               <Button
+                                display={['none', 'inline']}
                                 colorScheme="gray"
                                 leftIcon={<MdPrint size="20px" />}
                                 onClick={handlePrint}
