@@ -11,13 +11,16 @@ import {
   Text,
   useBreakpointValue,
   useColorModeValue,
+  useToast,
 } from '@chakra-ui/react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useCallback, useContext } from 'react';
+import { useCallback, useContext, useState } from 'react';
 
 import { AuthContext } from '@/context/AuthContext';
+import { GetServerSideProps } from 'next';
 import { Layout } from '@/components/templates';
-import { MdLogin } from 'node_modules.nosync/react-icons/md';
+import { MdLogin } from 'react-icons/md';
+import { parseCookies } from 'nookies';
 import { useRouter } from 'next/router';
 
 type SignInInputs = {
@@ -26,18 +29,45 @@ type SignInInputs = {
 };
 
 function SignIn() {
-  const { signIn } = useContext(AuthContext);
   const router = useRouter();
+  const toast = useToast();
+  const { signIn } = useContext(AuthContext);
+  const { after }: { after?: string } = router.query;
+  const [loading, setLoading] = useState(false);
   const inputVariant = useColorModeValue('floating-light', 'floating-dark');
   const { register, handleSubmit } = useForm<SignInInputs>();
   const handleSignIn: SubmitHandler<SignInInputs> = useCallback(
-    (data) => {
-      signIn({
-        username: data.username,
-        password: data.password,
-      });
+    async ({ username, password }) => {
+      setLoading(true);
+      await signIn({
+        username,
+        password,
+        redirectUrl: after,
+      })
+        .then(({ user }) => {
+          toast({
+            title: 'Sucesso',
+            description: `Olá ${user.colaborator.name}, bem vind@ de volta`,
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+            position: 'bottom',
+          });
+          setLoading(false);
+        })
+        .catch((error) => {
+          toast({
+            title: 'Erro',
+            description: error.message,
+            status: 'error',
+            duration: 9000,
+            isClosable: true,
+            position: 'bottom',
+          });
+          setLoading(false);
+        });
     },
-    [signIn],
+    [after, signIn, toast],
   );
   return (
     <Layout title="Entrar" isHeaded={false} isFooted={false}>
@@ -81,14 +111,21 @@ function SignIn() {
               <Stack spacing="6">
                 <Stack spacing="5">
                   <FormControl variant={inputVariant}>
-                    <Input placeholder=" " {...register('username')} />
+                    <Input
+                      id="username"
+                      placeholder=" "
+                      required
+                      {...register('username')}
+                    />
                     <FormLabel>Usuário</FormLabel>
                   </FormControl>
                   <FormControl variant={inputVariant}>
                     <Input
+                      id="password"
                       type="password"
                       placeholder=" "
                       autoComplete="current-password"
+                      required
                       {...register('password')}
                     />
                     <FormLabel>Senha</FormLabel>
@@ -109,6 +146,7 @@ function SignIn() {
                     colorScheme="blue"
                     type="submit"
                     leftIcon={<MdLogin size="20px" />}
+                    isLoading={loading}
                   >
                     Entrar
                   </Button>
@@ -121,5 +159,22 @@ function SignIn() {
     </Layout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { ['healthcareToken']: token } = parseCookies(ctx);
+
+  if (token) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: true,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+};
 
 export default SignIn;

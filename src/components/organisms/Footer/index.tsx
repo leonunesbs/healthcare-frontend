@@ -8,7 +8,7 @@ export interface FooterProps extends BoxProps {
 
 const Footer = ({ ...rest }: FooterProps) => {
   return (
-    <Box {...rest}>
+    <Box px={[2, 6]} {...rest}>
       <h1>Footer</h1>
     </Box>
   );

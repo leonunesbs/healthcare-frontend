@@ -3,7 +3,7 @@ import { destroyCookie, parseCookies, setCookie } from 'nookies';
 
 import client from '@/services/apollo-client';
 import { gql } from '@apollo/client';
-import { useRouter } from 'node_modules.nosync/next/router';
+import { useRouter } from 'next/router';
 
 const SIGN_IN = gql`
   mutation getToken($username: String!, $password: String!) {
@@ -11,18 +11,30 @@ const SIGN_IN = gql`
       token
       user {
         id
+        colaborator {
+          name
+        }
         isStaff
       }
     }
   }
 `;
 
+type UserType = {
+  id: string;
+  colaborator: {
+    name: string;
+  };
+  isStaff: boolean;
+};
+
 interface AuthContextProps {
   isAuthenticated: boolean;
+  user: UserType | null;
   token: string;
-  signIn: (data: SignInData) => Promise<void>;
-  isStaff: boolean | null;
+  signIn: (data: SignInData) => Promise<any>;
   signOut: () => void;
+  checkToken: () => Promise<boolean | undefined>;
 }
 
 interface AuthProviderProps {
@@ -39,7 +51,7 @@ export const AuthContext = createContext({} as AuthContextProps);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const router = useRouter();
-  const [isStaff, setIsStaff] = useState<boolean | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
 
   const { ['healthcareToken']: token } = parseCookies();
 
@@ -49,7 +61,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     async (data: SignInData) => {
       const { username, password, redirectUrl } = data;
 
-      await client
+      return await client
         .mutate({
           mutation: SIGN_IN,
           variables: {
@@ -59,19 +71,56 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         })
         .then(({ data: { tokenAuth } }) => {
           if (tokenAuth) {
-            const { token, user } = tokenAuth;
+            const { token, user }: { user: UserType; token: string } =
+              tokenAuth;
             setCookie(null, 'healthcareToken', token, {
               maxAge: 60 * 60 * 24 * 7,
               path: '/',
             });
-            setIsStaff(user.is_staff);
+            setUser(user);
           }
 
           router.push(redirectUrl || '/');
+          return { ...tokenAuth };
+        })
+        .catch(({ ...rest }) => {
+          throw { ...rest };
         });
     },
     [router],
   );
+
+  const checkToken = useCallback(async () => {
+    if (token) {
+      const { data } = await client.query({
+        query: gql`
+          query getUser {
+            user {
+              id
+              colaborator {
+                name
+              }
+              isStaff
+            }
+          }
+        `,
+        context: {
+          headers: {
+            authorization: `JWT ${token}`,
+          },
+        },
+      });
+      if (data.user) {
+        setUser(data.user);
+        return true;
+      }
+      setUser(null);
+      return false;
+    } else {
+      setUser(null);
+      return false;
+    }
+  }, [token]);
 
   const signOut = useCallback(() => {
     destroyCookie(null, 'healthcareToken');
@@ -81,11 +130,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   return (
     <AuthContext.Provider
       value={{
+        user,
         token,
         isAuthenticated,
         signIn,
         signOut,
-        isStaff,
+        checkToken,
       }}
     >
       {children}

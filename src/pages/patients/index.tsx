@@ -28,11 +28,14 @@ import {
 import { MdAdd, MdClose, MdSave, MdSearch } from 'react-icons/md';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { useCallback, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
+import { AuthContext } from '@/context/AuthContext';
+import { GetServerSideProps } from 'next';
 import { IEvaluation } from '@/interfaces/Evaluation';
 import { IPatient } from '@/interfaces/Patient';
 import { Layout } from '@/components/templates';
+import { parseCookies } from 'nookies';
 import { useRouter } from 'next/router';
 
 const PATIENTS_QUERY = gql`
@@ -125,6 +128,7 @@ type CreatePatientInputs = {
 function Patients() {
   const router = useRouter();
   const toast = useToast();
+  const { token, isAuthenticated } = useContext(AuthContext);
   const { fullName } = router.query;
   const [fullNameState, setFullNameState] = useState<string>(
     fullName as string,
@@ -139,6 +143,11 @@ function Patients() {
   const { data, refetch } = useQuery<PatientsQueryData>(PATIENTS_QUERY, {
     variables: {
       first: 15,
+    },
+    context: {
+      headers: {
+        authorization: `JWT ${token}`,
+      },
     },
   });
 
@@ -184,7 +193,7 @@ function Patients() {
             status: 'success',
             duration: 9000,
             isClosable: true,
-            position: 'top-right',
+            position: 'bottom',
           });
 
           onClose();
@@ -199,7 +208,7 @@ function Patients() {
             status: 'warning',
             duration: 9000,
             isClosable: true,
-            position: 'top-right',
+            position: 'bottom',
           });
           router.push(`/patient/${data?.createPatient?.patient?.id}`);
         }
@@ -215,6 +224,20 @@ function Patients() {
       first: first + 5,
     });
   }, [first, fullNameState, refetch]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast({
+        title: 'Atenção',
+        description: 'Você não está autenticado',
+        status: 'warning',
+        duration: 9000,
+        isClosable: true,
+        position: 'bottom',
+      });
+      router.push(`/signin?after=${router.pathname}`);
+    }
+  }, [isAuthenticated, router, toast]);
 
   return (
     <Layout title="Pacientes">
@@ -415,5 +438,22 @@ function Patients() {
     </Layout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { ['healthcareToken']: token } = parseCookies(ctx);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: `/signin?after=${ctx.resolvedUrl}`,
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+};
 
 export default Patients;

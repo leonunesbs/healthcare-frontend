@@ -1,4 +1,4 @@
-import { Box, Container } from '@chakra-ui/react';
+import { Box, useColorModeValue } from '@chakra-ui/react';
 import { Footer, Header } from '@/components/organisms';
 
 import Head from 'next/head';
@@ -32,13 +32,18 @@ const Layout = ({
         />
       </Head>
       <Box>
-        <Container maxW="container.xl" px={[2, 6]}>
+        <Box mx="auto">
           {isHeaded && <Header />}
-          <Box minH="100vh" maxW="8xl" mx="auto" m={0} p={0}>
+          <Box
+            h="0.5"
+            bg={useColorModeValue('blue.500', 'blue.200')}
+            mb={['4', '6']}
+          />
+          <Box minH="100vh" maxW="8xl" mx="auto" m={0} p={0} px={[2, 6]}>
             {children}
           </Box>
           {isFooted && <Footer />}
-        </Container>
+        </Box>
       </Box>
     </>
   );
