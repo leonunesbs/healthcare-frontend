@@ -18,6 +18,7 @@ import { useCallback, useContext, useState } from 'react';
 
 import { AuthContext } from '@/context/AuthContext';
 import { GetServerSideProps } from 'next';
+import Image from 'next/image';
 import { Layout } from '@/components/templates';
 import { MdLogin } from 'react-icons/md';
 import { parseCookies } from 'nookies';
@@ -74,6 +75,15 @@ function SignIn() {
       <Container maxW="lg" py={{ base: '12', md: '24' }}>
         <Stack spacing="8">
           <Stack spacing={6}>
+            <Box mx="auto" position={'relative'} h="150px" w="150px">
+              <Image
+                alt="logo"
+                blurDataURL={useColorModeValue('/ln-light.png', '/ln-dark.png')}
+                src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
+                layout="fill"
+                quality={50}
+              />
+            </Box>
             <Stack spacing={6} textAlign="center">
               <Heading
                 as="h1"

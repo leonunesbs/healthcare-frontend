@@ -36,7 +36,7 @@ const Layout = ({
           {isHeaded && <Header />}
           <Box
             h="0.5"
-            bg={useColorModeValue('blue.500', 'blue.200')}
+            bg={useColorModeValue('gray.500', 'gray.200')}
             mb={['4', '6']}
           />
           <Box minH="100vh" maxW="8xl" mx="auto" m={0} p={0} px={[2, 6]}>

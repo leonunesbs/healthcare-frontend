@@ -32,9 +32,10 @@ const Header = ({ ...rest }: HeaderProps) => {
         <Box position={'relative'} h="45px" w="45px">
           <Image
             alt="logo"
+            blurDataURL={useColorModeValue('/ln-light.png', '/ln-dark.png')}
             src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
             layout="fill"
-            quality={50}
+            quality={1}
           />
         </Box>
         <HStack as="nav" display={['none', 'block']}>

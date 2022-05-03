@@ -28,6 +28,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import ChakraUIRenderer from 'chakra-ui-markdown-renderer';
 import { CustomMDEditor } from '@/components/atoms';
+import { GetServerSideProps } from 'next';
 import { IColaborator } from '@/interfaces/Colaborator';
 import { IEvaluation } from '@/interfaces/Evaluation';
 import { IPatient } from '@/interfaces/Patient';
@@ -35,6 +36,7 @@ import { IService } from '@/interfaces/Service';
 import { IUnit } from '@/interfaces/Unit';
 import { Layout } from '@/components/templates';
 import ReactMarkdown from 'react-markdown';
+import { parseCookies } from 'nookies/dist';
 import { useReactToPrint } from 'react-to-print';
 import { useRouter } from 'next/router';
 
@@ -157,7 +159,7 @@ type EditPatientFormData = {
 
 const Patient = () => {
   const router = useRouter();
-  const { token } = useContext(AuthContext);
+  const { token, isAuthenticated } = useContext(AuthContext);
   const { colorMode, setColorMode } = useColorMode();
   const evaluationCardBgColor = useColorModeValue('gray.50', 'gray.800');
   const [initalColorMode] = useState(colorMode);
@@ -166,7 +168,16 @@ const Patient = () => {
   const toast = useToast();
   const contentRef = useRef(null);
 
-  const { data, loading, refetch } = useQuery<PatientQueryData>(PATIENT_QUERY);
+  const { data, loading, refetch } = useQuery<PatientQueryData>(PATIENT_QUERY, {
+    context: {
+      headers: {
+        authorization: `JWT ${token}`,
+      },
+    },
+    variables: {
+      id,
+    },
+  });
 
   const patient = data?.patient;
 
@@ -311,6 +322,20 @@ const Patient = () => {
     },
     [editPatientForm, id, refetch, toast, updatePatient],
   );
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast({
+        title: 'Atenção',
+        description: 'Você não está autenticado',
+        status: 'warning',
+        duration: 9000,
+        isClosable: true,
+        position: 'bottom',
+      });
+      router.push(`/signin?after=${router.pathname}`);
+    }
+  }, [isAuthenticated, router, toast]);
 
   return (
     <Layout title={(patient?.fullName as string) || 'Nome do paciente'}>
@@ -505,7 +530,7 @@ const Patient = () => {
                           key={node.id}
                           bgColor={evaluationCardBgColor}
                           rounded="md"
-                          boxShadow={['base']}
+                          boxShadow={'base'}
                           p={4}
                         >
                           <Stack spacing={4}>
@@ -578,6 +603,23 @@ const Patient = () => {
       </Stack>
     </Layout>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const { ['healthcareToken']: token } = parseCookies(ctx);
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: `/signin?after=${ctx.resolvedUrl}`,
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
 };
 
 export default Patient;
