@@ -489,7 +489,14 @@ const Patient = () => {
               <Stack spacing={4}>
                 <Collapse in={evaluate} animateOpacity>
                   <Stack p={1}>
-                    <CustomMDEditor value={value} setValue={setValue} />
+                    <FormControl>
+                      <FormLabel>
+                        <Heading as="h3" size="lg">
+                          Evolução
+                        </Heading>
+                      </FormLabel>
+                      <CustomMDEditor value={value} setValue={setValue} />
+                    </FormControl>
                   </Stack>
                 </Collapse>
                 <Stack spacing={4}>

@@ -4,11 +4,18 @@ import {
   Button,
   Container,
   HStack,
+  IconButton,
   Stack,
   Text,
   useColorMode,
   useColorModeValue,
 } from '@chakra-ui/react';
+import {
+  MdDarkMode,
+  MdLightMode,
+  MdLogin,
+  MdLogout,
+} from 'node_modules.nosync/react-icons/md';
 import { ReactNode, useContext, useEffect } from 'react';
 
 import { AuthContext } from '@/context/AuthContext';
@@ -23,7 +30,7 @@ const Header = ({ ...rest }: HeaderProps) => {
   const router = useRouter();
   const { signOut, isAuthenticated, user, checkToken } =
     useContext(AuthContext);
-  const { toggleColorMode } = useColorMode();
+  const { toggleColorMode, colorMode } = useColorMode();
   useEffect(() => {
     checkToken();
   }, [checkToken]);
@@ -34,8 +41,8 @@ const Header = ({ ...rest }: HeaderProps) => {
           as={Button}
           variant="unstyled"
           position={'relative'}
-          h={['60px']}
-          w={['60px']}
+          h={['3rem', '4rem', '5rem']}
+          w={['3rem', '4rem', '5rem']}
           onClick={() => router.push('/')}
         >
           <Image
@@ -73,31 +80,49 @@ const Header = ({ ...rest }: HeaderProps) => {
             Pacientes
           </Button>
         </HStack>
-        {isAuthenticated ? (
-          <HStack>
-            <Button onClick={toggleColorMode}>Luz</Button>
+        <HStack>
+          <IconButton
+            aria-label="light"
+            variant={'ghost'}
+            colorScheme="blue"
+            icon={
+              colorMode === 'light' ? (
+                <MdDarkMode size="20px" />
+              ) : (
+                <MdLightMode size="20px" />
+              )
+            }
+            onClick={toggleColorMode}
+          />
+          {isAuthenticated && (
             <Stack>
-              <Text>Olá, {user?.colaborator.name}</Text>
+              <Text fontSize="sm">Olá, {user?.colaborator.name}</Text>
               <Button
                 id="SignOut"
-                variant="link"
+                variant={'ghost'}
+                size="sm"
                 colorScheme="blue"
                 onClick={signOut}
+                leftIcon={<MdLogout size="20px" />}
               >
                 Sair
               </Button>
             </Stack>
-          </HStack>
-        ) : (
-          <Button
-            id="SignIn"
-            variant="link"
-            colorScheme="blue"
-            onClick={() => router.push('/signin')}
-          >
-            Entrar
-          </Button>
-        )}
+          )}
+          {!isAuthenticated && (
+            <Stack>
+              <Button
+                id="SignIn"
+                variant={'solid'}
+                colorScheme="blue"
+                onClick={() => router.push('/signin')}
+                leftIcon={<MdLogin size="20px" />}
+              >
+                Entrar
+              </Button>
+            </Stack>
+          )}
+        </HStack>
       </HStack>
     </Container>
   );
