@@ -54,7 +54,7 @@ const Header = ({ ...rest }: HeaderProps) => {
             quality={100}
           />
         </Box>
-        <HStack as="nav" display={['none', 'block']}>
+        <HStack as="nav" display={['none', 'block']} spacing={[8, 10]}>
           <Button
             variant={'link'}
             isActive={router.pathname === '/'}
@@ -99,7 +99,7 @@ const Header = ({ ...rest }: HeaderProps) => {
               <Text fontSize="sm">Olá, {user?.colaborator.name}</Text>
               <Button
                 id="SignOut"
-                variant={'ghost'}
+                variant="ghost"
                 size="sm"
                 colorScheme="blue"
                 onClick={signOut}

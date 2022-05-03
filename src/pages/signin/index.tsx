@@ -8,7 +8,6 @@ import {
   Heading,
   Input,
   Stack,
-  Text,
   useBreakpointValue,
   useColorModeValue,
   useToast,
@@ -100,20 +99,6 @@ function SignIn() {
               >
                 Acesse a sua conta
               </Heading>
-              <Stack
-                direction={['column', 'row']}
-                spacing={['0', '2']}
-                justify="center"
-              >
-                <Text color="muted">Não possui uma conta?</Text>
-                <Button
-                  variant="link"
-                  colorScheme="blue"
-                  onClick={() => router.push('/signup')}
-                >
-                  Cadastre-se
-                </Button>
-              </Stack>
             </Stack>
           </Stack>
           <form onSubmit={handleSubmit(handleSignIn)}>

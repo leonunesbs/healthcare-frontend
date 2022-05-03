@@ -12,6 +12,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Skeleton,
   Stack,
   Table,
   TableContainer,
@@ -132,10 +133,7 @@ function Patients() {
   const router = useRouter();
   const toast = useToast();
   const { token, isAuthenticated } = useContext(AuthContext);
-  const { fullName } = router.query;
-  const [fullNameState, setFullNameState] = useState<string>(
-    fullName as string,
-  );
+  const [fullNameState, setFullNameState] = useState<string>('');
   const [first, setFirst] = useState(15);
   const { register, handleSubmit } = useForm<SearchInputs>();
   const createPatientForm = useForm<CreatePatientInputs>();
@@ -143,16 +141,19 @@ function Patients() {
 
   const inputVariant = useColorModeValue('floating-light', 'floating-dark');
 
-  const { data, refetch } = useQuery<PatientsQueryData>(PATIENTS_QUERY, {
-    variables: {
-      first: 15,
-    },
-    context: {
-      headers: {
-        authorization: `JWT ${token}`,
+  const { data, refetch, loading } = useQuery<PatientsQueryData>(
+    PATIENTS_QUERY,
+    {
+      variables: {
+        first: 15,
+      },
+      context: {
+        headers: {
+          authorization: `JWT ${token}`,
+        },
       },
     },
-  });
+  );
 
   const [createPatient] = useMutation(CREATE_PATIENT, {
     context: {
@@ -164,7 +165,12 @@ function Patients() {
 
   const searchSubmit: SubmitHandler<SearchInputs> = useCallback(
     ({ fullName }) => {
-      setFullNameState(fullName);
+      setFullNameState(
+        fullName
+          .toUpperCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, ''),
+      );
       if (!fullName) {
         router.replace({
           pathname: '/patients',
@@ -176,7 +182,10 @@ function Patients() {
         });
       }
       refetch({
-        fullName: fullName.toUpperCase(),
+        fullName: fullName
+          .toUpperCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, ''),
         first,
       });
     },
@@ -187,7 +196,10 @@ function Patients() {
     async ({ fullName, birthDate, cpf, email, phone }) => {
       await createPatient({
         variables: {
-          fullName: fullName.toUpperCase(),
+          fullName: fullName
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, ''),
           email: email?.toLowerCase(),
           cpf,
           phone,
@@ -208,7 +220,10 @@ function Patients() {
 
           onClose();
           refetch({
-            fullName: data?.createPatient?.patient.fullName.toUpperCase(),
+            fullName: data?.createPatient?.patient.fullName
+              .toUpperCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, ''),
             first,
           });
         } else {
@@ -230,7 +245,10 @@ function Patients() {
   const handleFetchMore = useCallback(async () => {
     setFirst(first + 5);
     refetch({
-      fullName: fullNameState.toUpperCase(),
+      fullName: fullNameState
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ''),
       first: first + 5,
     });
   }, [first, fullNameState, refetch]);
@@ -254,7 +272,7 @@ function Patients() {
       <Stack spacing={[4, 8]}>
         <Box
           py={{ base: '2', sm: '8' }}
-          px={[0, 10]}
+          px={[0, 6]}
           boxShadow={['none', 'md']}
           borderRadius={{ base: 'none', sm: 'xl' }}
           bgColor="rgb(255, 255, 255, 0.01)"
@@ -374,69 +392,76 @@ function Patients() {
             borderRadius={{ base: 'none', sm: 'xl' }}
             bgColor="rgb(255, 255, 255, 0.01)"
           >
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Nome completo</Th>
-                  <Th />
-                  <Th>Idade</Th>
-                  <Th>Data de nascimento</Th>
-                  <Th>Última consulta</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {data?.allPatients?.edges?.map(({ node }) => (
-                  <Tr key={node.id}>
-                    <Td colSpan={2}>
-                      <Button
-                        variant="link"
-                        colorScheme={'blue'}
-                        onClick={() => router.push(`/patient/${node.id}`)}
-                      >
-                        {node.fullName}
-                      </Button>
-                    </Td>
-                    <Td>{node.age}</Td>
-                    <Td>
-                      {new Date(node.birthDate).toLocaleString('pt-BR', {
-                        dateStyle: 'short',
-                        timeZone: 'UTC',
-                      })}
-                    </Td>
-                    <Td>
-                      {node.latestEvaluation ? (
-                        new Date(node.latestEvaluation).toLocaleString(
-                          'pt-BR',
-                          {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                            timeZone: 'UTC',
-                          },
-                        )
-                      ) : (
-                        <Text as="i">Nenhuma consulta</Text>
-                      )}
-                    </Td>
-                  </Tr>
-                ))}
-                {!data?.allPatients?.edges?.length && (
+            <Skeleton
+              isLoaded={!loading}
+              rounded="md"
+              startColor="gray.50"
+              endColor="gray.800"
+            >
+              <Table>
+                <Thead>
                   <Tr>
-                    <Td colSpan={5}>
-                      <Text>
-                        Nenhum paciente encontrado.{' '}
-                        <Button
-                          variant={'link'}
-                          colorScheme="blue"
-                          onClick={onOpen}
-                        >
-                          Adicionar paciente
-                        </Button>
-                      </Text>
-                    </Td>
+                    <Th>Nome completo</Th>
+                    <Th />
+                    <Th>Idade</Th>
+                    <Th>Data de nascimento</Th>
+                    <Th>Última consulta</Th>
                   </Tr>
-                )}
-              </Tbody>
-            </Table>
+                </Thead>
+                <Tbody>
+                  {data?.allPatients?.edges?.map(({ node }) => (
+                    <Tr key={node.id}>
+                      <Td colSpan={2}>
+                        <Button
+                          variant="link"
+                          colorScheme={'blue'}
+                          onClick={() => router.push(`/patient/${node.id}`)}
+                        >
+                          {node.fullName}
+                        </Button>
+                      </Td>
+                      <Td>{node.age}</Td>
+                      <Td>
+                        {new Date(node.birthDate).toLocaleString('pt-BR', {
+                          dateStyle: 'short',
+                          timeZone: 'UTC',
+                        })}
+                      </Td>
+                      <Td>
+                        {node.latestEvaluation ? (
+                          new Date(node.latestEvaluation).toLocaleString(
+                            'pt-BR',
+                            {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                              timeZone: 'UTC',
+                            },
+                          )
+                        ) : (
+                          <Text as="i">Nenhuma consulta</Text>
+                        )}
+                      </Td>
+                    </Tr>
+                  ))}
+                  {!data?.allPatients?.edges?.length && (
+                    <Tr>
+                      <Td colSpan={5}>
+                        <Text>
+                          Nenhum paciente encontrado.{' '}
+                          <Button
+                            variant={'link'}
+                            colorScheme="blue"
+                            onClick={onOpen}
+                          >
+                            Adicionar paciente
+                          </Button>
+                        </Text>
+                      </Td>
+                    </Tr>
+                  )}
+                </Tbody>
+              </Table>
+            </Skeleton>
           </TableContainer>
           <HStack justify={'center'}>
             <Button

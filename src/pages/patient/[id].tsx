@@ -1,4 +1,10 @@
 import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Badge,
   Box,
   Button,
@@ -18,9 +24,17 @@ import {
   Text,
   useColorMode,
   useColorModeValue,
+  useDisclosure,
   useToast,
 } from '@chakra-ui/react';
-import { MdAdd, MdClose, MdEdit, MdPrint, MdSave } from 'react-icons/md';
+import {
+  MdAdd,
+  MdClose,
+  MdDeleteForever,
+  MdEdit,
+  MdPrint,
+  MdSave,
+} from 'react-icons/md';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
@@ -123,6 +137,14 @@ const CREATE_EVALUATION = gql`
   }
 `;
 
+const DELETE_PATIENT = gql`
+  mutation DeletePatient($patientId: ID!) {
+    deletePatient(patientId: $patientId) {
+      deleted
+    }
+  }
+`;
+
 const UPDATE_PATIENT = gql`
   mutation UpdatePatient(
     $patientId: ID!
@@ -167,6 +189,9 @@ const Patient = () => {
   const { id } = router.query;
   const toast = useToast();
   const contentRef = useRef(null);
+  const deletePatientDialogButton = useRef<HTMLButtonElement>(null);
+
+  const deletePatientDisclosure = useDisclosure();
 
   const { data, loading, refetch } = useQuery<PatientQueryData>(PATIENT_QUERY, {
     context: {
@@ -191,14 +216,21 @@ const Patient = () => {
       },
     },
   });
-  const [updatePatient] = useMutation(UPDATE_PATIENT, {
+
+  const [deletePatient, deletePatientProps] = useMutation(DELETE_PATIENT, {
     context: {
       headers: {
         authorization: `JWT ${token}`,
       },
     },
   });
-
+  const [updatePatient, updatePatientProps] = useMutation(UPDATE_PATIENT, {
+    context: {
+      headers: {
+        authorization: `JWT ${token}`,
+      },
+    },
+  });
   const editPatientForm = useForm<EditPatientFormData>();
 
   const inputVariant = useColorModeValue('floating-light', 'floating-dark');
@@ -284,7 +316,10 @@ const Patient = () => {
       await updatePatient({
         variables: {
           patientId: id,
-          fullName,
+          fullName: fullName
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, ''),
           email,
           phone,
           cpf,
@@ -381,7 +416,7 @@ const Patient = () => {
                 </Button>
               </HStack>
               <Collapse in={editPatient} animateOpacity>
-                <Stack w="full" spacing={6}>
+                <Stack w="full" spacing={6} py={2}>
                   <Heading as="h3" size="lg">
                     Editar paciente
                   </Heading>
@@ -436,6 +471,7 @@ const Patient = () => {
                   </Stack>
                   <HStack justify={'flex-end'}>
                     <Button
+                      autoFocus
                       leftIcon={<MdClose size="20px" />}
                       onClick={() => {
                         editPatientForm.reset();
@@ -444,10 +480,71 @@ const Patient = () => {
                     >
                       Cancelar
                     </Button>
+                    <Stack>
+                      <Button
+                        colorScheme="red"
+                        leftIcon={<MdDeleteForever size="20px" />}
+                        onClick={deletePatientDisclosure.onOpen}
+                        isLoading={deletePatientProps.loading}
+                      >
+                        Remover
+                      </Button>
+                      <AlertDialog
+                        isOpen={deletePatientDisclosure.isOpen}
+                        leastDestructiveRef={deletePatientDialogButton}
+                        onClose={deletePatientDisclosure.onClose}
+                      >
+                        <AlertDialogOverlay>
+                          <AlertDialogContent>
+                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                              Deletar paciente
+                            </AlertDialogHeader>
+
+                            <AlertDialogBody>
+                              <Stack>
+                                <Text>Você tem certeza?</Text>
+                                <Text>
+                                  Os dados do paciente e todo o seu histórico
+                                  serão removidos permanentemente.
+                                </Text>
+                                <Text>Esta ação não poderá ser desfeita.</Text>
+                              </Stack>
+                            </AlertDialogBody>
+
+                            <AlertDialogFooter>
+                              <HStack>
+                                <Button
+                                  ref={deletePatientDialogButton}
+                                  onClick={deletePatientDisclosure.onClose}
+                                >
+                                  Cancelar
+                                </Button>
+                                <Button
+                                  colorScheme="red"
+                                  leftIcon={<MdDeleteForever size="20px" />}
+                                  onClick={() => {
+                                    deletePatient({
+                                      variables: {
+                                        patientId: id,
+                                      },
+                                    });
+                                    router.push('/patients');
+                                  }}
+                                  isLoading={deletePatientProps.loading}
+                                >
+                                  Remover
+                                </Button>
+                              </HStack>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialogOverlay>
+                      </AlertDialog>
+                    </Stack>
                     <Button
                       type="submit"
                       colorScheme="blue"
                       leftIcon={<MdSave size="20px" />}
+                      isLoading={updatePatientProps.loading}
                     >
                       Salvar
                     </Button>
@@ -472,6 +569,15 @@ const Patient = () => {
                 textColor: useColorModeValue('white', 'blue.800'),
               }}
             >
+              Atendimento
+            </Tab>
+            <Tab
+              _selected={{
+                color: 'white',
+                bg: useColorModeValue('blue.500', 'blue.200'),
+                textColor: useColorModeValue('white', 'blue.800'),
+              }}
+            >
               Evolução
             </Tab>
             <Tab
@@ -485,6 +591,7 @@ const Patient = () => {
             </Tab>
           </TabList>
           <TabPanels>
+            <TabPanel>Atendimento</TabPanel>
             <TabPanel>
               <Stack spacing={4}>
                 <Collapse in={evaluate} animateOpacity>
