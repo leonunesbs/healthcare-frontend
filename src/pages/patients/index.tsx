@@ -244,7 +244,7 @@ function Patients() {
       <Stack spacing={[4, 8]}>
         <Box
           py={{ base: '2', sm: '8' }}
-          px={{ base: '2', sm: '10' }}
+          px={[0, 10]}
           boxShadow={['none', 'md']}
           borderRadius={{ base: 'none', sm: 'xl' }}
           bgColor="rgb(255, 255, 255, 0.01)"
@@ -354,7 +354,7 @@ function Patients() {
           <TableContainer
             py={{ base: '2', sm: '8' }}
             px={[2, 4]}
-            boxShadow={['base', 'md']}
+            boxShadow={'md'}
             borderRadius={{ base: 'none', sm: 'xl' }}
             bgColor="rgb(255, 255, 255, 0.01)"
           >

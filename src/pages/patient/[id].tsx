@@ -469,7 +469,8 @@ const Patient = () => {
             <Tab
               _selected={{
                 color: 'white',
-                bg: 'blue.500',
+                bg: useColorModeValue('blue.500', 'blue.200'),
+                textColor: useColorModeValue('white', 'blue.800'),
               }}
             >
               Evolução
@@ -477,7 +478,8 @@ const Patient = () => {
             <Tab
               _selected={{
                 color: 'white',
-                bg: 'blue.500',
+                bg: useColorModeValue('blue.500', 'blue.200'),
+                textColor: useColorModeValue('white', 'blue.800'),
               }}
             >
               Prescrição
