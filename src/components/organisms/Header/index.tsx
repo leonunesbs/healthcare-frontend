@@ -2,6 +2,7 @@ import {
   Box,
   BoxProps,
   Button,
+  Container,
   HStack,
   Stack,
   Text,
@@ -27,15 +28,23 @@ const Header = ({ ...rest }: HeaderProps) => {
     checkToken();
   }, [checkToken]);
   return (
-    <Box maxW="8xl" mx="auto" px={2} py={2} {...rest}>
+    <Container maxW="8xl" px={4} py={2} {...rest}>
       <HStack justify={'space-between'}>
-        <Box position={'relative'} h="45px" w="45px">
+        <Box
+          as={Button}
+          variant="unstyled"
+          position={'relative'}
+          h={['60px']}
+          w={['60px']}
+          onClick={() => router.push('/')}
+        >
           <Image
             alt="logo"
+            placeholder="blur"
             blurDataURL={useColorModeValue('/ln-light.png', '/ln-dark.png')}
             src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
             layout="fill"
-            quality={1}
+            quality={100}
           />
         </Box>
         <HStack as="nav" display={['none', 'block']}>
@@ -90,7 +99,7 @@ const Header = ({ ...rest }: HeaderProps) => {
           </Button>
         )}
       </HStack>
-    </Box>
+    </Container>
   );
 };
 

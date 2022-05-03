@@ -73,12 +73,14 @@ const CREATE_PATIENT = gql`
   mutation createPatient(
     $fullName: String!
     $birthDate: DateTime!
+    $cpf: String
     $email: String
     $phone: String
   ) {
     createPatient(
       fullName: $fullName
       birthDate: $birthDate
+      cpf: $cpf
       email: $email
       phone: $phone
     ) {
@@ -121,6 +123,7 @@ type SearchInputs = {
 type CreatePatientInputs = {
   fullName: string;
   birthDate: string;
+  cpf?: string;
   email?: string;
   phone?: string;
 };
@@ -151,7 +154,13 @@ function Patients() {
     },
   });
 
-  const [createPatient] = useMutation(CREATE_PATIENT);
+  const [createPatient] = useMutation(CREATE_PATIENT, {
+    context: {
+      headers: {
+        authorization: `JWT ${token}`,
+      },
+    },
+  });
 
   const searchSubmit: SubmitHandler<SearchInputs> = useCallback(
     ({ fullName }) => {
@@ -175,11 +184,12 @@ function Patients() {
   );
 
   const handleCreatePatient: SubmitHandler<CreatePatientInputs> = useCallback(
-    async ({ fullName, birthDate, email, phone }) => {
+    async ({ fullName, birthDate, cpf, email, phone }) => {
       await createPatient({
         variables: {
           fullName: fullName.toUpperCase(),
           email: email?.toLowerCase(),
+          cpf,
           phone,
           birthDate: new Date(
             new Date(birthDate).toLocaleString('en-US', { timeZone: 'UTC' }),
@@ -303,6 +313,13 @@ function Patients() {
                           <FormControl variant={inputVariant}>
                             <Input
                               placeholder=" "
+                              {...createPatientForm.register('cpf')}
+                            />
+                            <FormLabel>CPF</FormLabel>
+                          </FormControl>
+                          <FormControl variant={inputVariant}>
+                            <Input
+                              placeholder=" "
                               type="email"
                               {...createPatientForm.register('email')}
                             />
@@ -318,7 +335,6 @@ function Patients() {
                           </FormControl>
                         </Stack>
                       </ModalBody>
-
                       <ModalFooter>
                         <HStack>
                           <Button

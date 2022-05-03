@@ -72,12 +72,21 @@ function SignIn() {
   );
   return (
     <Layout title="Entrar" isHeaded={false} isFooted={false}>
-      <Container maxW="lg" py={{ base: '12', md: '24' }}>
+      <Container py={{ base: '12', md: '24' }} maxW="lg">
         <Stack spacing="8">
           <Stack spacing={6}>
-            <Box mx="auto" position={'relative'} h="150px" w="150px">
+            <Box
+              as={Button}
+              mx="auto"
+              position={'relative'}
+              h="150px"
+              w="150px"
+              variant="unstyled"
+              onClick={() => router.push('/')}
+            >
               <Image
                 alt="logo"
+                placeholder="blur"
                 blurDataURL={useColorModeValue('/ln-light.png', '/ln-dark.png')}
                 src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
                 layout="fill"

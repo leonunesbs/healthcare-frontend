@@ -348,114 +348,113 @@ const Patient = () => {
             borderRadius={{ base: 'none', sm: 'xl' }}
             bgColor="rgb(255, 255, 255, 0.01)"
           >
-            {editPatient ? (
-              <Stack w="full">
-                <Stack w="full" spacing={4}>
+            <Stack justify={'space-between'} w="full">
+              <Stack>
+                <Heading>
+                  {patient?.fullName}
+                  <Badge fontSize={'xl'} ml={2} colorScheme="blue">
+                    {patient?.age}
+                  </Badge>
+                </Heading>
+                <Text>
+                  Data de nascimento (idade):{' '}
+                  {new Date(patient?.birthDate as string).toLocaleString(
+                    'pt-BR',
+                    {
+                      dateStyle: 'short',
+                      timeZone: 'UTC',
+                    },
+                  )}{' '}
+                  ({patient?.age})
+                </Text>
+                <Text>CPF: {patient?.cpf}</Text>
+                <Text>Email: {patient?.email}</Text>
+                <Text>Celular: {patient?.phone}</Text>
+              </Stack>
+              <HStack justify={'flex-end'}>
+                <Button
+                  aria-label="Editar paciente"
+                  onClick={toggleEditPatient}
+                  leftIcon={<MdEdit size="20px" />}
+                >
+                  Editar paciente
+                </Button>
+              </HStack>
+              <Collapse in={editPatient} animateOpacity>
+                <Stack w="full" spacing={6}>
                   <Heading as="h3" size="lg">
                     Editar paciente
                   </Heading>
-                  <FormControl variant={inputVariant} isRequired>
-                    <Input
-                      defaultValue={patient?.fullName}
-                      required
-                      placeholder=" "
-                      textTransform={'uppercase'}
-                      {...editPatientForm.register('fullName')}
-                    />
-                    <FormLabel>Nome</FormLabel>
-                  </FormControl>
-                  <FormControl variant={inputVariant} isRequired>
-                    <Input
-                      defaultValue={patient?.birthDate}
-                      required
-                      placeholder=" "
-                      type="date"
-                      {...editPatientForm.register('birthDate')}
-                    />
-                    <FormLabel>Data de nascimento</FormLabel>
-                  </FormControl>
-                  <FormControl variant={inputVariant}>
-                    <Input
-                      defaultValue={patient?.cpf}
-                      placeholder=" "
-                      {...editPatientForm.register('cpf')}
-                    />
-                    <FormLabel>CPF</FormLabel>
-                  </FormControl>
-                  <FormControl variant={inputVariant}>
-                    <Input
-                      defaultValue={patient?.email}
-                      placeholder=" "
-                      textTransform={'lowercase'}
-                      type="email"
-                      {...editPatientForm.register('email')}
-                    />
-                    <FormLabel>Email</FormLabel>
-                  </FormControl>
-                  <FormControl variant={inputVariant}>
-                    <Input
-                      defaultValue={patient?.phone}
-                      placeholder=" "
-                      type="tel"
-                      {...editPatientForm.register('phone')}
-                    />
-                    <FormLabel>Celular</FormLabel>
-                  </FormControl>
+                  <Stack w="full" spacing={4}>
+                    <FormControl variant={inputVariant} isRequired>
+                      <Input
+                        defaultValue={patient?.fullName}
+                        required
+                        placeholder=" "
+                        textTransform={'uppercase'}
+                        {...editPatientForm.register('fullName')}
+                      />
+                      <FormLabel>Nome</FormLabel>
+                    </FormControl>
+                    <FormControl variant={inputVariant} isRequired>
+                      <Input
+                        defaultValue={patient?.birthDate}
+                        required
+                        placeholder=" "
+                        type="date"
+                        {...editPatientForm.register('birthDate')}
+                      />
+                      <FormLabel>Data de nascimento</FormLabel>
+                    </FormControl>
+                    <FormControl variant={inputVariant}>
+                      <Input
+                        defaultValue={patient?.cpf}
+                        placeholder=" "
+                        {...editPatientForm.register('cpf')}
+                      />
+                      <FormLabel>CPF</FormLabel>
+                    </FormControl>
+                    <FormControl variant={inputVariant}>
+                      <Input
+                        defaultValue={patient?.email}
+                        placeholder=" "
+                        textTransform={'lowercase'}
+                        type="email"
+                        {...editPatientForm.register('email')}
+                      />
+                      <FormLabel>Email</FormLabel>
+                    </FormControl>
+                    <FormControl variant={inputVariant}>
+                      <Input
+                        defaultValue={patient?.phone}
+                        placeholder=" "
+                        type="tel"
+                        {...editPatientForm.register('phone')}
+                      />
+                      <FormLabel>Celular</FormLabel>
+                    </FormControl>
+                  </Stack>
+                  <HStack justify={'flex-end'}>
+                    <Button
+                      leftIcon={<MdClose size="20px" />}
+                      onClick={() => {
+                        editPatientForm.reset();
+                        setEditPatient(false);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      colorScheme="blue"
+                      leftIcon={<MdSave size="20px" />}
+                    >
+                      Salvar
+                    </Button>
+                  </HStack>
                 </Stack>
-                <HStack justify={'flex-end'}>
-                  <Button
-                    leftIcon={<MdClose size="20px" />}
-                    onClick={() => {
-                      editPatientForm.reset();
-                      setEditPatient(false);
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    colorScheme="blue"
-                    leftIcon={<MdSave size="20px" />}
-                  >
-                    Salvar
-                  </Button>
-                </HStack>
-              </Stack>
-            ) : (
-              <Stack justify={'space-between'} w="full">
-                <Stack>
-                  <Heading>
-                    {patient?.fullName}
-                    <Badge fontSize={'xl'} ml={2} colorScheme="blue">
-                      {patient?.age}
-                    </Badge>
-                  </Heading>
-                  <Text>
-                    Data de nascimento (idade):{' '}
-                    {new Date(patient?.birthDate as string).toLocaleString(
-                      'pt-BR',
-                      {
-                        dateStyle: 'short',
-                        timeZone: 'UTC',
-                      },
-                    )}{' '}
-                    ({patient?.age})
-                  </Text>
-                  <Text>CPF: {patient?.cpf}</Text>
-                  <Text>Email: {patient?.email}</Text>
-                  <Text>Celular: {patient?.phone}</Text>
-                </Stack>
-                <HStack justify={'flex-end'}>
-                  <Button
-                    aria-label="Editar paciente"
-                    onClick={toggleEditPatient}
-                    leftIcon={<MdEdit size="20px" />}
-                  >
-                    Editar paciente
-                  </Button>
-                </HStack>
-              </Stack>
-            )}
+              </Collapse>
+            </Stack>
           </HStack>
         </form>
         <Tabs
