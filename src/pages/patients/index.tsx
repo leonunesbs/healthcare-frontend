@@ -134,7 +134,7 @@ function Patients() {
   const toast = useToast();
   const { token, isAuthenticated } = useContext(AuthContext);
   const [fullNameState, setFullNameState] = useState<string>('');
-  const [first, setFirst] = useState(15);
+  const [first, setFirst] = useState(10);
   const { register, handleSubmit } = useForm<SearchInputs>();
   const createPatientForm = useForm<CreatePatientInputs>();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -145,7 +145,7 @@ function Patients() {
     PATIENTS_QUERY,
     {
       variables: {
-        first: 15,
+        first: 10,
       },
       context: {
         headers: {

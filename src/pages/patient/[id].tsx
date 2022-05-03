@@ -312,7 +312,25 @@ const Patient = () => {
 
   const handleEditPatient: SubmitHandler<EditPatientFormData> = useCallback(
     async ({ fullName, email, birthDate, phone, cpf }) => {
-      console.log(cpf);
+      if (
+        JSON.stringify([fullName, email, birthDate, phone, cpf]) ==
+        JSON.stringify([
+          patient?.fullName,
+          patient?.email,
+          patient?.birthDate,
+          patient?.phone,
+          patient?.cpf,
+        ])
+      ) {
+        toast({
+          title: 'Nenhum dado alterado',
+          status: 'warning',
+          duration: 9000,
+          isClosable: true,
+          position: 'bottom',
+        });
+        return;
+      }
       await updatePatient({
         variables: {
           patientId: id,
@@ -355,7 +373,7 @@ const Patient = () => {
           });
         });
     },
-    [editPatientForm, id, refetch, toast, updatePatient],
+    [editPatientForm, id, patient, refetch, toast, updatePatient],
   );
 
   useEffect(() => {
