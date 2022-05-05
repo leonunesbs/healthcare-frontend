@@ -4,71 +4,39 @@ import {
   Container,
   FormControl,
   FormLabel,
-  HStack,
   Heading,
   Input,
   Stack,
   useBreakpointValue,
   useColorModeValue,
-  useToast,
 } from '@chakra-ui/react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useCallback, useContext, useState } from 'react';
 
-import { AuthContext } from '@/context/AuthContext';
 import { GetServerSideProps } from 'next';
 import Image from 'next/image';
 import { Layout } from '@/components/templates';
-import { MdLogin } from 'react-icons/md';
+import { MdSend } from 'react-icons/md';
 import { parseCookies } from 'nookies';
+import { useCallback } from 'react';
 import { useRouter } from 'next/router';
 
-type SignInInputs = {
+type SignInStep1Inputs = {
   username: string;
-  password: string;
 };
 
-function SignIn() {
+function SignInStep1() {
   const router = useRouter();
-  const toast = useToast();
-  const { signIn } = useContext(AuthContext);
-  const { after }: { after?: string } = router.query;
-  const [loading, setLoading] = useState(false);
+  const { after } = router.query;
   const inputVariant = useColorModeValue('floating-light', 'floating-dark');
-  const { register, handleSubmit } = useForm<SignInInputs>();
-  const handleSignIn: SubmitHandler<SignInInputs> = useCallback(
-    async ({ username, password }) => {
-      setLoading(true);
-      await signIn({
-        username,
-        password,
-        redirectUrl: after,
-      })
-        .then(({ user }) => {
-          toast({
-            title: 'Sucesso',
-            description: `Olá ${user.colaborator.name}, bem vind@ de volta`,
-            status: 'success',
-            duration: 9000,
-            isClosable: true,
-            position: 'bottom',
-          });
-          setLoading(false);
-        })
-        .catch((error) => {
-          toast({
-            title: 'Erro',
-            description: error.message,
-            status: 'error',
-            duration: 9000,
-            isClosable: true,
-            position: 'bottom',
-          });
-          setLoading(false);
-        });
+  const { register, handleSubmit } = useForm<SignInStep1Inputs>();
+
+  const handleSignIn: SubmitHandler<SignInStep1Inputs> = useCallback(
+    ({ username }) => {
+      router.push(`/signin/${username}${after ? `?after=${after}` : ''}`);
     },
-    [after, signIn, toast],
+    [after, router],
   );
+
   return (
     <Layout title="Entrar" isHeaded={false} isFooted={false}>
       <Container py={{ base: '12', md: '24' }} maxW="lg">
@@ -123,36 +91,14 @@ function SignIn() {
                     />
                     <FormLabel>Usuário</FormLabel>
                   </FormControl>
-                  <FormControl variant={inputVariant}>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder=" "
-                      autoComplete="current-password"
-                      required
-                      {...register('password')}
-                    />
-                    <FormLabel>Senha</FormLabel>
-                  </FormControl>
                 </Stack>
-                <HStack justify="flex-end">
-                  <Button
-                    variant="link"
-                    colorScheme="blue"
-                    size="sm"
-                    onClick={() => router.push('/forgot-password')}
-                  >
-                    Esqueceu sua senha?
-                  </Button>
-                </HStack>
                 <Stack spacing="6">
                   <Button
                     colorScheme="blue"
                     type="submit"
-                    leftIcon={<MdLogin size="20px" />}
-                    isLoading={loading}
+                    leftIcon={<MdSend size="20px" />}
                   >
-                    Entrar
+                    Continuar
                   </Button>
                 </Stack>
               </Stack>
@@ -181,4 +127,4 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   };
 };
 
-export default SignIn;
+export default SignInStep1;

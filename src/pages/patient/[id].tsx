@@ -43,7 +43,7 @@ import { AuthContext } from '@/context/AuthContext';
 import ChakraUIRenderer from 'chakra-ui-markdown-renderer';
 import { CustomMDEditor } from '@/components/atoms';
 import { GetServerSideProps } from 'next';
-import { IColaborator } from '@/interfaces/Colaborator';
+import { ICollaborator } from '@/interfaces/Collaborator';
 import { IEvaluation } from '@/interfaces/Evaluation';
 import { IPatient } from '@/interfaces/Patient';
 import { IService } from '@/interfaces/Service';
@@ -71,7 +71,7 @@ const PATIENT_QUERY = gql`
             content
             createdAt
             updatedAt
-            colaborator {
+            collaborator {
               id
               fullName
               role
@@ -96,7 +96,7 @@ interface ExtendedService extends IService {
 
 interface ExtendedEvaulation extends IEvaluation {
   service: ExtendedService;
-  colaborator: IColaborator;
+  collaborator: ICollaborator;
 }
 
 interface ExtendedPatient extends IPatient {
@@ -120,7 +120,7 @@ const CREATE_EVALUATION = gql`
         content
         createdAt
         updatedAt
-        colaborator {
+        collaborator {
           id
           fullName
           role
@@ -181,12 +181,12 @@ type EditPatientFormData = {
 
 const Patient = () => {
   const router = useRouter();
+  const { id, tabIndex } = router.query;
   const { token, isAuthenticated } = useContext(AuthContext);
   const { colorMode, setColorMode } = useColorMode();
   const evaluationCardBgColor = useColorModeValue('gray.50', 'gray.800');
   const [initalColorMode] = useState(colorMode);
   const [editPatient, setEditPatient] = useState(false);
-  const { id } = router.query;
   const toast = useToast();
   const contentRef = useRef(null);
   const deletePatientDialogButton = useRef<HTMLButtonElement>(null);
@@ -246,7 +246,7 @@ const Patient = () => {
     if (value) {
       await createEvaluation({
         variables: {
-          serviceId: 'U2VydmljZU5vZGU6MQ==',
+          serviceId: localStorage.getItem('healthcare:serviceId'),
           patientId: patient?.id,
           content: value,
         },
@@ -578,6 +578,10 @@ const Patient = () => {
           boxShadow={['base', 'md']}
           borderRadius={{ base: 'none', sm: 'xl' }}
           bgColor="rgb(255, 255, 255, 0.01)"
+          defaultIndex={parseInt(tabIndex as string) || 0}
+          onChange={(index) =>
+            router.replace(`/patient/${id}?tabIndex=${index}`)
+          }
         >
           <TabList mb="1em" overflowX={'auto'} overflowY="hidden">
             <Tab
@@ -672,9 +676,9 @@ const Patient = () => {
                             </Heading>
                             <Text fontSize={'lg'}>
                               <Badge colorScheme={'blue'} mr={2}>
-                                {node.colaborator.role}
+                                {node.collaborator.role}
                               </Badge>
-                              {node.colaborator.fullName}
+                              {node.collaborator.fullName}
                             </Text>
                             <Stack spacing={0} fontSize="sm">
                               <Text as="i">

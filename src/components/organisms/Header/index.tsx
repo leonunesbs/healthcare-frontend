@@ -96,7 +96,7 @@ const Header = ({ ...rest }: HeaderProps) => {
           />
           {isAuthenticated && (
             <Stack>
-              <Text fontSize="sm">Olá, {user?.colaborator.name}</Text>
+              <Text fontSize="sm">Olá, {user?.collaborator.name}</Text>
               <Button
                 id="SignOut"
                 variant="ghost"

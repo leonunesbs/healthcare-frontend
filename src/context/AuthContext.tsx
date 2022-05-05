@@ -11,7 +11,7 @@ const SIGN_IN = gql`
       token
       user {
         id
-        colaborator {
+        collaborator {
           name
         }
         isStaff
@@ -22,7 +22,7 @@ const SIGN_IN = gql`
 
 type UserType = {
   id: string;
-  colaborator: {
+  collaborator: {
     name: string;
   };
   isStaff: boolean;
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           query getUser {
             user {
               id
-              colaborator {
+              collaborator {
                 name
               }
               isStaff
@@ -124,6 +124,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = useCallback(() => {
     destroyCookie(null, 'healthcareToken');
+    localStorage.removeItem('healthcare:serviceId');
     router.reload();
   }, [router]);
 
