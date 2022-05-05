@@ -1,10 +1,10 @@
 import {
-  Box,
   BoxProps,
   Button,
   Container,
   HStack,
   IconButton,
+  LinkBox,
   Stack,
   Text,
   useColorMode,
@@ -19,6 +19,7 @@ import {
 import { ReactNode, useContext, useEffect } from 'react';
 
 import { AuthContext } from '@/context/AuthContext';
+import { CustomLink } from '@/components/atoms';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
@@ -37,47 +38,43 @@ const Header = ({ ...rest }: HeaderProps) => {
   return (
     <Container maxW="8xl" px={4} py={2} {...rest}>
       <HStack justify={'space-between'}>
-        <Box
-          as={Button}
-          variant="unstyled"
+        <LinkBox
           position={'relative'}
           h={['3rem', '4rem', '5rem']}
           w={['3rem', '4rem', '5rem']}
-          onClick={() => router.push('/')}
         >
-          <Image
-            alt="logo"
-            placeholder="blur"
-            blurDataURL={useColorModeValue('/ln-light.png', '/ln-dark.png')}
-            src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
-            layout="fill"
-            quality={100}
-          />
-        </Box>
+          <CustomLink href="/">
+            <Image
+              alt="logo"
+              placeholder="blur"
+              blurDataURL={useColorModeValue('/ln-light.png', '/ln-dark.png')}
+              src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
+              layout="fill"
+              quality={100}
+            />
+          </CustomLink>
+        </LinkBox>
         <HStack as="nav" display={['none', 'block']} spacing={[8, 10]}>
           <Button
-            variant={'link'}
+            variant={'ghost'}
             isActive={router.pathname === '/'}
             colorScheme="blue"
-            onClick={() => router.push('/')}
           >
-            Início
+            <CustomLink href="/">Início</CustomLink>
           </Button>
           <Button
-            variant={'link'}
+            variant={'ghost'}
             isActive={router.pathname === '/attendances'}
             colorScheme="blue"
-            onClick={() => router.push('/attendances')}
           >
-            Atendimentos
+            <CustomLink href="/attendances">Atendimentos</CustomLink>
           </Button>
           <Button
-            variant={'link'}
+            variant={'ghost'}
             isActive={router.pathname === '/patients'}
             colorScheme="blue"
-            onClick={() => router.push('/patients')}
           >
-            Pacientes
+            <CustomLink href="/patients">Pacientes</CustomLink>
           </Button>
         </HStack>
         <HStack>
@@ -98,7 +95,6 @@ const Header = ({ ...rest }: HeaderProps) => {
             <Stack>
               <Text fontSize="sm">Olá, {user?.collaborator.name}</Text>
               <Button
-                id="SignOut"
                 variant="ghost"
                 size="sm"
                 colorScheme="blue"
@@ -112,13 +108,11 @@ const Header = ({ ...rest }: HeaderProps) => {
           {!isAuthenticated && (
             <Stack>
               <Button
-                id="SignIn"
-                variant={'solid'}
+                variant="solid"
                 colorScheme="blue"
-                onClick={() => router.push('/signin')}
                 leftIcon={<MdLogin size="20px" />}
               >
-                Entrar
+                <CustomLink href="/signin">Entrar</CustomLink>
               </Button>
             </Stack>
           )}

@@ -15,12 +15,14 @@ import {
 } from '@chakra-ui/react';
 import { MdArrowBack, MdLogin } from 'react-icons/md';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { gql, useQuery } from '@apollo/client';
-import { useCallback, useContext } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 
 import { AuthContext } from '@/context/AuthContext';
+import { GetServerSidePropsContext } from 'node_modules.nosync/next';
 import Image from 'next/image';
 import { Layout } from '@/components/templates';
+import client from '@/services/apollo-client';
+import { gql } from '@apollo/client';
 import { useRouter } from 'next/router';
 
 type SignInInputs = {
@@ -49,13 +51,15 @@ interface ServiceData {
   };
 }
 
-function SignInStep2() {
+interface SignInStep2 {
+  services: ServiceData[];
+}
+
+function SignInStep2({ services }: SignInStep2) {
   const router = useRouter();
   const { username, after } = router.query;
   const toast = useToast();
   const { register, handleSubmit, setValue } = useForm<SignInInputs>();
-
-  const { data, refetch } = useQuery(COLLABORATOR_SERVICES);
 
   const { signIn } = useContext(AuthContext);
 
@@ -92,6 +96,19 @@ function SignInStep2() {
     },
     [after, signIn, toast],
   );
+  useEffect(() => {
+    if (!services) {
+      toast({
+        title: 'Erro',
+        description: 'Não há nenhum serviço para este Colaborador',
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+        position: 'bottom',
+      });
+      setTimeout(() => router.push('/signin'), 5000);
+    }
+  }, [router, services, toast]);
 
   return (
     <Layout
@@ -157,37 +174,17 @@ function SignInStep2() {
                       <Select
                         placeholder="Selecione uma opção"
                         required
-                        onFocus={async () => {
+                        onFocus={() => {
                           setValue('username', username as string);
-                          return await refetch({
-                            username: username as string,
-                          }).then(({ data }) => {
-                            if (
-                              data?.collaboratorServices?.length === 0 ||
-                              data?.collaboratorServices === null
-                            ) {
-                              toast({
-                                title: 'Erro',
-                                description:
-                                  'Não há nenhum serviço para este Colaborador',
-                                status: 'error',
-                                duration: 9000,
-                                isClosable: true,
-                                position: 'bottom',
-                              });
-                            }
-                          });
                         }}
                         {...register('service')}
                       >
-                        {data?.collaboratorServices &&
-                          data?.collaboratorServices.map(
-                            (service: ServiceData) => (
-                              <option key={service.id} value={service.id}>
-                                {service.name} - {service.unit.name}
-                              </option>
-                            ),
-                          )}
+                        {services &&
+                          services.map((service: ServiceData) => (
+                            <option key={service.id} value={service.id}>
+                              {service.name} - {service.unit.name}
+                            </option>
+                          ))}
                       </Select>
                       <FormLabel>Serviço</FormLabel>
                     </FormControl>
@@ -237,6 +234,23 @@ function SignInStep2() {
       </Container>
     </Layout>
   );
+}
+
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const { data } = await client.query({
+    query: COLLABORATOR_SERVICES,
+    variables: {
+      username: context.query.username,
+    },
+  });
+
+  console.log(data);
+
+  return {
+    props: {
+      services: data.collaboratorServices,
+    },
+  };
 }
 
 export default SignInStep2;

@@ -208,6 +208,7 @@ const Patient = () => {
 
   const [value, setValue] = useState('');
   const [evaluate, setEvaluate] = useState(false);
+  const [prescribe, setPrescribe] = useState(false);
   const [evaluations, setEvaluations] = useState<any>();
   const [createEvaluation] = useMutation(CREATE_EVALUATION, {
     context: {
@@ -564,7 +565,7 @@ const Patient = () => {
                       leftIcon={<MdSave size="20px" />}
                       isLoading={updatePatientProps.loading}
                     >
-                      Salvar
+                      Salvar informações
                     </Button>
                   </HStack>
                 </Stack>
@@ -577,10 +578,12 @@ const Patient = () => {
           variant="enclosed"
           boxShadow={['base', 'md']}
           borderRadius={{ base: 'none', sm: 'xl' }}
-          bgColor="rgb(255, 255, 255, 0.01)"
-          defaultIndex={parseInt(tabIndex as string) || 0}
+          bgColor="rgb(255, 255, 255, 0.02)"
+          defaultIndex={parseInt(tabIndex as string) || 1}
           onChange={(index) =>
-            router.replace(`/patient/${id}?tabIndex=${index}`)
+            router.push(`/patient/${id}?tabIndex=${index}`, undefined, {
+              scroll: false,
+            })
           }
         >
           <TabList mb="1em" overflowX={'auto'} overflowY="hidden">
@@ -610,6 +613,15 @@ const Patient = () => {
               }}
             >
               Prescrição
+            </Tab>
+            <Tab
+              _selected={{
+                color: 'white',
+                bg: useColorModeValue('blue.500', 'blue.200'),
+                textColor: useColorModeValue('white', 'blue.800'),
+              }}
+            >
+              Exames
             </Tab>
           </TabList>
           <TabPanels>
@@ -652,7 +664,7 @@ const Patient = () => {
                           leftIcon={<MdSave size="25px" />}
                           onClick={handleSaveEvaluation}
                         >
-                          Salvar
+                          Salvar evolução
                         </Button>
                       </>
                     )}
@@ -733,7 +745,119 @@ const Patient = () => {
               </Stack>
             </TabPanel>
             <TabPanel>
-              <p>two!</p>
+              <Stack spacing={4}>
+                <Collapse in={prescribe} animateOpacity>
+                  <Stack p={1}>
+                    <Heading as="h3" size="lg">
+                      Prescrição
+                    </Heading>
+                  </Stack>
+                </Collapse>
+                <Stack spacing={4}>
+                  <HStack justify="flex-end">
+                    {!prescribe ? (
+                      <Button
+                        colorScheme="blue"
+                        leftIcon={<MdAdd size="25px" />}
+                        onClick={() => setPrescribe(true)}
+                      >
+                        Nova prescrição
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          colorScheme="gray"
+                          leftIcon={<MdClose size="25px" />}
+                          onClick={() => setPrescribe(false)}
+                        >
+                          Fechar
+                        </Button>
+                        <Button
+                          colorScheme="blue"
+                          leftIcon={<MdSave size="25px" />}
+                        >
+                          Salvar prescrição
+                        </Button>
+                      </>
+                    )}
+                  </HStack>
+                </Stack>
+                <Skeleton isLoaded={!loading}>
+                  <Stack spacing={[4, 6]}>
+                    {evaluations?.map(
+                      ({ node }: { node: ExtendedEvaulation }) => (
+                        <Box
+                          ref={contentRef}
+                          key={node.id}
+                          bgColor={evaluationCardBgColor}
+                          rounded="md"
+                          boxShadow={'base'}
+                          p={4}
+                        >
+                          <Stack spacing={4}>
+                            <Heading as="h3" fontSize={'lg'}>
+                              {node.service.name}
+                            </Heading>
+                            <Text fontSize={'lg'}>
+                              <Badge colorScheme={'blue'} mr={2}>
+                                {node.collaborator.role}
+                              </Badge>
+                              {node.collaborator.fullName}
+                            </Text>
+                            <Stack spacing={0} fontSize="sm">
+                              <Text as="i">
+                                Data da consulta:{' '}
+                                {new Date(node.createdAt).toLocaleString(
+                                  'pt-BR',
+                                  {
+                                    dateStyle: 'short',
+                                    timeStyle: 'short',
+                                    timeZone: 'UTC',
+                                  },
+                                )}
+                              </Text>
+                              <Text as="i">
+                                Ultima atualização:{' '}
+                                {new Date(node.updatedAt).toLocaleString(
+                                  'pt-BR',
+                                  {
+                                    dateStyle: 'short',
+                                    timeStyle: 'short',
+                                    timeZone: 'UTC',
+                                  },
+                                )}
+                              </Text>
+                            </Stack>
+
+                            <Box
+                              p={4}
+                              boxShadow={['sm', 'base']}
+                              borderRadius={{ base: 'none', sm: 'xl' }}
+                            >
+                              <ReactMarkdown components={ChakraUIRenderer()}>
+                                {node.content}
+                              </ReactMarkdown>
+                            </Box>
+                            <HStack justify={'flex-end'}>
+                              <Button
+                                display={['none', 'inline']}
+                                colorScheme="gray"
+                                leftIcon={<MdPrint size="20px" />}
+                                onClick={handlePrint}
+                              >
+                                Imprimir
+                              </Button>
+                            </HStack>
+                          </Stack>
+                        </Box>
+                      ),
+                    )}
+                  </Stack>
+                </Skeleton>
+              </Stack>
+            </TabPanel>
+            <TabPanel>
+              <p>Exames</p>
             </TabPanel>
           </TabPanels>
         </Tabs>

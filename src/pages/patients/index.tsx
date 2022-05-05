@@ -366,7 +366,7 @@ function Patients() {
                             colorScheme="blue"
                             leftIcon={<MdSave size="20px" />}
                           >
-                            Salvar
+                            Salvar informações
                           </Button>
                         </HStack>
                       </ModalFooter>
