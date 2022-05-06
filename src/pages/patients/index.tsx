@@ -139,8 +139,6 @@ function Patients() {
   const createPatientForm = useForm<CreatePatientInputs>();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const inputVariant = useColorModeValue('floating-light', 'floating-dark');
-
   const { data, refetch, loading } = useQuery<PatientsQueryData>(
     PATIENTS_QUERY,
     {
@@ -279,7 +277,7 @@ function Patients() {
         >
           <form onSubmit={handleSubmit(searchSubmit)}>
             <Stack>
-              <FormControl variant={inputVariant}>
+              <FormControl variant="floating">
                 <Input
                   type="text"
                   placeholder=" "
@@ -309,7 +307,7 @@ function Patients() {
                       <ModalCloseButton />
                       <ModalBody pb={6}>
                         <Stack spacing={6}>
-                          <FormControl variant={inputVariant} isRequired>
+                          <FormControl variant="floating" isRequired>
                             <Input
                               autoFocus
                               required
@@ -320,7 +318,7 @@ function Patients() {
                             />
                             <FormLabel>Nome completo</FormLabel>
                           </FormControl>
-                          <FormControl variant={inputVariant} isRequired>
+                          <FormControl variant="floating" isRequired>
                             <Input
                               type="date"
                               required
@@ -328,14 +326,14 @@ function Patients() {
                             />
                             <FormLabel>Data de nascimento</FormLabel>
                           </FormControl>
-                          <FormControl variant={inputVariant}>
+                          <FormControl variant="floating">
                             <Input
                               placeholder=" "
                               {...createPatientForm.register('cpf')}
                             />
                             <FormLabel>CPF</FormLabel>
                           </FormControl>
-                          <FormControl variant={inputVariant}>
+                          <FormControl variant="floating">
                             <Input
                               placeholder=" "
                               type="email"
@@ -343,7 +341,7 @@ function Patients() {
                             />
                             <FormLabel>Email</FormLabel>
                           </FormControl>
-                          <FormControl variant={inputVariant}>
+                          <FormControl variant="floating">
                             <Input
                               placeholder=" "
                               type="tel"

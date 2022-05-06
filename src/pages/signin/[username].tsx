@@ -18,7 +18,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { useCallback, useContext, useEffect } from 'react';
 
 import { AuthContext } from '@/context/AuthContext';
-import { GetServerSidePropsContext } from 'node_modules.nosync/next';
+import { GetServerSidePropsContext } from 'next';
 import Image from 'next/image';
 import { Layout } from '@/components/templates';
 import client from '@/services/apollo-client';
@@ -62,8 +62,6 @@ function SignInStep2({ services }: SignInStep2) {
   const { register, handleSubmit, setValue } = useForm<SignInInputs>();
 
   const { signIn } = useContext(AuthContext);
-
-  const inputVariant = useColorModeValue('floating-light', 'floating-dark');
 
   const handleSignIn: SubmitHandler<SignInInputs> = useCallback(
     async ({ username, password, service }) => {
@@ -158,7 +156,7 @@ function SignInStep2({ services }: SignInStep2) {
               >
                 <Stack spacing="6">
                   <Stack spacing="5">
-                    <FormControl variant={inputVariant} isRequired>
+                    <FormControl variant="floating" isRequired>
                       <Input
                         id="username"
                         placeholder=" "
@@ -170,7 +168,7 @@ function SignInStep2({ services }: SignInStep2) {
                       />
                       <FormLabel>Usuário</FormLabel>
                     </FormControl>
-                    <FormControl variant={inputVariant} isRequired>
+                    <FormControl variant="floating" isRequired>
                       <Select
                         placeholder="Selecione uma opção"
                         required
@@ -188,7 +186,7 @@ function SignInStep2({ services }: SignInStep2) {
                       </Select>
                       <FormLabel>Serviço</FormLabel>
                     </FormControl>
-                    <FormControl variant={inputVariant} isRequired>
+                    <FormControl variant="floating" isRequired>
                       <Input
                         id="password"
                         type="password"

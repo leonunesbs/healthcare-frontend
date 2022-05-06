@@ -1,4 +1,4 @@
-import { Box, Container, useColorModeValue } from '@chakra-ui/react';
+import { Box, Container } from '@chakra-ui/react';
 import { Footer, Header } from '@/components/organisms';
 
 import Head from 'next/head';
@@ -32,11 +32,6 @@ const Layout = ({
         />
       </Head>
       {isHeaded && <Header />}
-      <Box
-        h="0.5"
-        bg={useColorModeValue('gray.500', 'gray.200')}
-        mb={['4', '6']}
-      />
       <Container maxW={'8xl'} minH="100vh">
         <Box>{children}</Box>
       </Container>

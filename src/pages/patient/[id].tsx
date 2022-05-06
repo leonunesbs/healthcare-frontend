@@ -234,8 +234,6 @@ const Patient = () => {
   });
   const editPatientForm = useForm<EditPatientFormData>();
 
-  const inputVariant = useColorModeValue('floating-light', 'floating-dark');
-
   useEffect(() => {
     refetch({
       id: id as string,
@@ -440,7 +438,7 @@ const Patient = () => {
                     Editar paciente
                   </Heading>
                   <Stack w="full" spacing={4}>
-                    <FormControl variant={inputVariant} isRequired>
+                    <FormControl variant="floating" isRequired>
                       <Input
                         defaultValue={patient?.fullName}
                         required
@@ -450,7 +448,7 @@ const Patient = () => {
                       />
                       <FormLabel>Nome</FormLabel>
                     </FormControl>
-                    <FormControl variant={inputVariant} isRequired>
+                    <FormControl variant="floating" isRequired>
                       <Input
                         defaultValue={patient?.birthDate}
                         required
@@ -460,7 +458,7 @@ const Patient = () => {
                       />
                       <FormLabel>Data de nascimento</FormLabel>
                     </FormControl>
-                    <FormControl variant={inputVariant}>
+                    <FormControl variant="floating">
                       <Input
                         defaultValue={patient?.cpf}
                         placeholder=" "
@@ -468,7 +466,7 @@ const Patient = () => {
                       />
                       <FormLabel>CPF</FormLabel>
                     </FormControl>
-                    <FormControl variant={inputVariant}>
+                    <FormControl variant="floating">
                       <Input
                         defaultValue={patient?.email}
                         placeholder=" "
@@ -478,7 +476,7 @@ const Patient = () => {
                       />
                       <FormLabel>Email</FormLabel>
                     </FormControl>
-                    <FormControl variant={inputVariant}>
+                    <FormControl variant="floating">
                       <Input
                         defaultValue={patient?.phone}
                         placeholder=" "

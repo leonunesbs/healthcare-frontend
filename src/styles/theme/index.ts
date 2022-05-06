@@ -1,4 +1,5 @@
 import { Form } from '@/styles/theme/components';
+import { colors } from '@/styles/theme/foundations';
 import { extendTheme, ThemeOverride, type ThemeConfig } from '@chakra-ui/react';
 import styles from './styles';
 
@@ -10,9 +11,12 @@ const config: ThemeConfig = {
 const overrides: ThemeOverride = {
   config,
   styles,
+  colors: colors,
   components: {
     Form,
   },
 };
 
-export default extendTheme(overrides);
+const theme = extendTheme(overrides);
+
+export default theme;

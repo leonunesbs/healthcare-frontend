@@ -27,12 +27,15 @@ type SignInStep1Inputs = {
 function SignInStep1() {
   const router = useRouter();
   const { after } = router.query;
-  const inputVariant = useColorModeValue('floating-light', 'floating-dark');
   const { register, handleSubmit } = useForm<SignInStep1Inputs>();
 
   const handleSignIn: SubmitHandler<SignInStep1Inputs> = useCallback(
     ({ username }) => {
-      router.push(`/signin/${username}${after ? `?after=${after}` : ''}`);
+      router.push(
+        `/signin/${username}${after ? `?after=${after}` : ''}`,
+        undefined,
+        { scroll: true },
+      );
     },
     [after, router],
   );
@@ -82,7 +85,7 @@ function SignInStep1() {
             >
               <Stack spacing="6">
                 <Stack spacing="5">
-                  <FormControl variant={inputVariant}>
+                  <FormControl variant="floating">
                     <Input
                       id="username"
                       placeholder=" "
