@@ -1,9 +1,9 @@
 {
-  "name": "typescript-nextjs-starter",
+  "name": "healthcare",
   "description": "A TypeScript starter for Next.js that includes all you need to build amazing projects",
   "version": "1.0.0",
   "private": true,
-  "author": "João Pedro Schmitz <hey@joaopedro.dev> (@jpedroschmitz)",
+  "author": "Leonardo Nunes <leonunesbs@gmail.com> (@leonunesbs)",
   "license": "MIT",
   "keywords": [
     "nextjs",

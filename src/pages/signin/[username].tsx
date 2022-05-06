@@ -1,11 +1,15 @@
+import { Layout } from '@/components/templates';
+import { AuthContext } from '@/context/AuthContext';
+import client from '@/services/apollo-client';
+import { gql } from '@apollo/client';
 import {
   Box,
   Button,
   Container,
   FormControl,
   FormLabel,
-  HStack,
   Heading,
+  HStack,
   Input,
   Select,
   Stack,
@@ -13,17 +17,12 @@ import {
   useColorModeValue,
   useToast,
 } from '@chakra-ui/react';
-import { MdArrowBack, MdLogin } from 'react-icons/md';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { useCallback, useContext, useEffect } from 'react';
-
-import { AuthContext } from '@/context/AuthContext';
 import { GetServerSidePropsContext } from 'next';
 import Image from 'next/image';
-import { Layout } from '@/components/templates';
-import client from '@/services/apollo-client';
-import { gql } from '@apollo/client';
 import { useRouter } from 'next/router';
+import { useCallback, useContext, useEffect } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { MdArrowBack, MdLogin } from 'react-icons/md';
 
 type SignInInputs = {
   username: string;
@@ -241,8 +240,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       username: context.query.username,
     },
   });
-
-  console.log(data);
 
   return {
     props: {
