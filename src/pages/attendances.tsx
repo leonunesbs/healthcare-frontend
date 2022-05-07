@@ -3,7 +3,7 @@ import { Layout } from '@/components/templates';
 function Attendances() {
   return (
     <Layout title="Atendimentos">
-      <h1>Atendimentos</h1>
+      <h1>Lista de atendimentos</h1>
     </Layout>
   );
 }
