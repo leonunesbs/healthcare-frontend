@@ -50,8 +50,8 @@
     "react-to-print": "2.14.7"
   },
   "devDependencies": {
-    "@commitlint/cli": "16.2.3",
-    "@commitlint/config-conventional": "16.2.1",
+    "@commitlint/cli": "16.3.0",
+    "@commitlint/config-conventional": "16.2.4",
     "@types/katex": "0.14.0",
     "@types/mermaid": "8.2.9",
     "@types/node": "16.11.27",
