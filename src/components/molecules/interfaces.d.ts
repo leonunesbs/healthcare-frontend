@@ -1,0 +1,1 @@
+export { PatientIdCardProps } from './PatientIDCard';

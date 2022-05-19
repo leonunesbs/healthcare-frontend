@@ -4,3 +4,8 @@ export interface IEvaluation {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface IEvaluationExtServiceCollaborator extends IEvaluation {
+  service: ExtendedService;
+  collaborator: ICollaborator;
+}

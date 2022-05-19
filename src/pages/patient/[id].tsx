@@ -1,10 +1,4 @@
 import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
   Badge,
   Box,
   Button,
@@ -13,7 +7,6 @@ import {
   FormLabel,
   HStack,
   Heading,
-  Input,
   Skeleton,
   Stack,
   Tab,
@@ -24,18 +17,9 @@ import {
   Text,
   useColorMode,
   useColorModeValue,
-  useDisclosure,
   useToast,
 } from '@chakra-ui/react';
-import {
-  MdAdd,
-  MdClose,
-  MdDeleteForever,
-  MdEdit,
-  MdPrint,
-  MdSave,
-} from 'react-icons/md';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { MdAdd, MdClose, MdPrint, MdSave } from 'react-icons/md';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
@@ -43,12 +27,10 @@ import { AuthContext } from '@/context/AuthContext';
 import ChakraUIRenderer from 'chakra-ui-markdown-renderer';
 import { CustomMDEditor } from '@/components/atoms';
 import { GetServerSideProps } from 'next';
-import { ICollaborator } from '@/interfaces/Collaborator';
-import { IEvaluation } from '@/interfaces/Evaluation';
-import { IPatient } from '@/interfaces/Patient';
-import { IService } from '@/interfaces/Service';
-import { IUnit } from '@/interfaces/Unit';
+import { IEvaluationExtServiceCollaborator } from './../../interfaces/Evaluation.d';
+import { IPatientExtEvaluations } from './../../interfaces/Patient.d';
 import { Layout } from '@/components/templates';
+import PatientIdCard from '@/components/molecules/PatientIDCard';
 import ReactMarkdown from 'react-markdown';
 import { parseCookies } from 'nookies/dist';
 import { useReactToPrint } from 'react-to-print';
@@ -90,23 +72,6 @@ const PATIENT_QUERY = gql`
   }
 `;
 
-interface ExtendedService extends IService {
-  unit: IUnit;
-}
-
-interface ExtendedEvaulation extends IEvaluation {
-  service: ExtendedService;
-  collaborator: ICollaborator;
-}
-
-interface ExtendedPatient extends IPatient {
-  evaluations: {
-    edges: {
-      node: ExtendedEvaulation;
-    }[];
-  };
-}
-
 const CREATE_EVALUATION = gql`
   mutation Evaluation($serviceId: ID!, $patientId: ID!, $content: String!) {
     createEvaluation(
@@ -137,61 +102,18 @@ const CREATE_EVALUATION = gql`
   }
 `;
 
-const DELETE_PATIENT = gql`
-  mutation DeletePatient($patientId: ID!) {
-    deletePatient(patientId: $patientId) {
-      deleted
-    }
-  }
-`;
-
-const UPDATE_PATIENT = gql`
-  mutation UpdatePatient(
-    $patientId: ID!
-    $fullName: String
-    $birthDate: DateTime
-    $email: String
-    $cpf: String
-    $phone: String
-  ) {
-    updatePatient(
-      patientId: $patientId
-      fullName: $fullName
-      birthDate: $birthDate
-      cpf: $cpf
-      email: $email
-      phone: $phone
-    ) {
-      updated
-    }
-  }
-`;
-
 interface PatientQueryData {
-  patient: ExtendedPatient;
+  patient: IPatientExtEvaluations;
 }
-
-type EditPatientFormData = {
-  fullName: string;
-  birthDate: string;
-  cpf?: string;
-  email?: string;
-  phone?: string;
-};
 
 const Patient = () => {
   const router = useRouter();
   const { id, tabIndex } = router.query;
   const { token, isAuthenticated } = useContext(AuthContext);
   const { colorMode, setColorMode } = useColorMode();
-  const evaluationCardBgColor = useColorModeValue('gray.50', 'gray.800');
   const [initalColorMode] = useState(colorMode);
-  const [editPatient, setEditPatient] = useState(false);
   const toast = useToast();
   const contentRef = useRef(null);
-  const deletePatientDialogButton = useRef<HTMLButtonElement>(null);
-
-  const deletePatientDisclosure = useDisclosure();
 
   const { data, loading, refetch } = useQuery<PatientQueryData>(PATIENT_QUERY, {
     context: {
@@ -217,22 +139,6 @@ const Patient = () => {
       },
     },
   });
-
-  const [deletePatient, deletePatientProps] = useMutation(DELETE_PATIENT, {
-    context: {
-      headers: {
-        authorization: `JWT ${token}`,
-      },
-    },
-  });
-  const [updatePatient, updatePatientProps] = useMutation(UPDATE_PATIENT, {
-    context: {
-      headers: {
-        authorization: `JWT ${token}`,
-      },
-    },
-  });
-  const editPatientForm = useForm<EditPatientFormData>();
 
   useEffect(() => {
     refetch({
@@ -305,76 +211,6 @@ const Patient = () => {
     onAfterPrint: () => setColorMode(initalColorMode),
   });
 
-  const toggleEditPatient = useCallback(() => {
-    setEditPatient(!editPatient);
-  }, [editPatient]);
-
-  const handleEditPatient: SubmitHandler<EditPatientFormData> = useCallback(
-    async ({ fullName, email, birthDate, phone, cpf }) => {
-      if (
-        JSON.stringify([fullName, email, birthDate, phone, cpf]) ==
-        JSON.stringify([
-          patient?.fullName,
-          patient?.email,
-          patient?.birthDate,
-          patient?.phone,
-          patient?.cpf,
-        ])
-      ) {
-        toast({
-          title: 'Nenhum dado alterado',
-          status: 'warning',
-          duration: 9000,
-          isClosable: true,
-          position: 'bottom',
-        });
-        return;
-      }
-      await updatePatient({
-        variables: {
-          patientId: id,
-          fullName: fullName
-            .toUpperCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, ''),
-          email,
-          phone,
-          cpf,
-          birthDate: new Date(
-            new Date(birthDate).toLocaleString('en-US', { timeZone: 'UTC' }),
-          ),
-        },
-      })
-        .then(({ data }) => {
-          if (data.updatePatient.updated) {
-            toast({
-              title: 'Dados atualizados com sucesso',
-              status: 'success',
-              duration: 9000,
-              isClosable: true,
-              position: 'bottom',
-            });
-            setEditPatient(false);
-            refetch({
-              id: id as string,
-            });
-            editPatientForm.reset();
-          }
-        })
-        .catch((err) => {
-          toast({
-            title: 'Erro',
-            description: err.message,
-            status: 'error',
-            duration: 9000,
-            isClosable: true,
-            position: 'bottom',
-          });
-        });
-    },
-    [editPatientForm, id, patient, refetch, toast, updatePatient],
-  );
-
   useEffect(() => {
     if (!isAuthenticated) {
       toast({
@@ -392,191 +228,16 @@ const Patient = () => {
   return (
     <Layout title={(patient?.fullName as string) || 'Nome do paciente'}>
       <Stack spacing={6}>
-        <form onSubmit={editPatientForm.handleSubmit(handleEditPatient)}>
-          <HStack
-            px={4}
-            py={6}
-            boxShadow={['base', 'md']}
-            borderRadius={{ base: 'none', sm: 'xl' }}
-            bgColor="rgb(255, 255, 255, 0.01)"
-          >
-            <Stack justify={'space-between'} w="full">
-              <Stack>
-                <Heading>
-                  {patient?.fullName}
-                  <Badge fontSize={'xl'} ml={2} colorScheme="blue">
-                    {patient?.age}
-                  </Badge>
-                </Heading>
-                <Text>
-                  Data de nascimento (idade):{' '}
-                  {new Date(patient?.birthDate as string).toLocaleString(
-                    'pt-BR',
-                    {
-                      dateStyle: 'short',
-                      timeZone: 'UTC',
-                    },
-                  )}{' '}
-                  ({patient?.age})
-                </Text>
-                <Text>CPF: {patient?.cpf}</Text>
-                <Text>Email: {patient?.email}</Text>
-                <Text>Celular: {patient?.phone}</Text>
-              </Stack>
-              <HStack justify={'flex-end'}>
-                <Button
-                  aria-label="Editar paciente"
-                  onClick={toggleEditPatient}
-                  leftIcon={<MdEdit size="20px" />}
-                >
-                  Editar paciente
-                </Button>
-              </HStack>
-              <Collapse in={editPatient} animateOpacity>
-                <Stack w="full" spacing={6} py={2}>
-                  <Heading as="h3" size="lg">
-                    Editar paciente
-                  </Heading>
-                  <Stack w="full" spacing={4}>
-                    <FormControl variant="floating" isRequired>
-                      <Input
-                        defaultValue={patient?.fullName}
-                        required
-                        placeholder=" "
-                        textTransform={'uppercase'}
-                        {...editPatientForm.register('fullName')}
-                      />
-                      <FormLabel>Nome</FormLabel>
-                    </FormControl>
-                    <FormControl variant="floating" isRequired>
-                      <Input
-                        defaultValue={patient?.birthDate}
-                        required
-                        placeholder=" "
-                        type="date"
-                        {...editPatientForm.register('birthDate')}
-                      />
-                      <FormLabel>Data de nascimento</FormLabel>
-                    </FormControl>
-                    <FormControl variant="floating">
-                      <Input
-                        defaultValue={patient?.cpf}
-                        placeholder=" "
-                        {...editPatientForm.register('cpf')}
-                      />
-                      <FormLabel>CPF</FormLabel>
-                    </FormControl>
-                    <FormControl variant="floating">
-                      <Input
-                        defaultValue={patient?.email}
-                        placeholder=" "
-                        textTransform={'lowercase'}
-                        type="email"
-                        {...editPatientForm.register('email')}
-                      />
-                      <FormLabel>Email</FormLabel>
-                    </FormControl>
-                    <FormControl variant="floating">
-                      <Input
-                        defaultValue={patient?.phone}
-                        placeholder=" "
-                        type="tel"
-                        {...editPatientForm.register('phone')}
-                      />
-                      <FormLabel>Celular</FormLabel>
-                    </FormControl>
-                  </Stack>
-                  <HStack justify={'flex-end'}>
-                    <Button
-                      autoFocus
-                      leftIcon={<MdClose size="20px" />}
-                      onClick={() => {
-                        editPatientForm.reset();
-                        setEditPatient(false);
-                      }}
-                    >
-                      Cancelar
-                    </Button>
-                    <Stack>
-                      <Button
-                        colorScheme="red"
-                        leftIcon={<MdDeleteForever size="20px" />}
-                        onClick={deletePatientDisclosure.onOpen}
-                        isLoading={deletePatientProps.loading}
-                      >
-                        Remover
-                      </Button>
-                      <AlertDialog
-                        isOpen={deletePatientDisclosure.isOpen}
-                        leastDestructiveRef={deletePatientDialogButton}
-                        onClose={deletePatientDisclosure.onClose}
-                      >
-                        <AlertDialogOverlay>
-                          <AlertDialogContent>
-                            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                              Deletar paciente
-                            </AlertDialogHeader>
-
-                            <AlertDialogBody>
-                              <Stack>
-                                <Text>Você tem certeza?</Text>
-                                <Text>
-                                  Os dados do paciente e todo o seu histórico
-                                  serão removidos permanentemente.
-                                </Text>
-                                <Text>Esta ação não poderá ser desfeita.</Text>
-                              </Stack>
-                            </AlertDialogBody>
-
-                            <AlertDialogFooter>
-                              <HStack>
-                                <Button
-                                  ref={deletePatientDialogButton}
-                                  onClick={deletePatientDisclosure.onClose}
-                                >
-                                  Cancelar
-                                </Button>
-                                <Button
-                                  colorScheme="red"
-                                  leftIcon={<MdDeleteForever size="20px" />}
-                                  onClick={() => {
-                                    deletePatient({
-                                      variables: {
-                                        patientId: id,
-                                      },
-                                    });
-                                    router.push('/patients');
-                                  }}
-                                  isLoading={deletePatientProps.loading}
-                                >
-                                  Remover
-                                </Button>
-                              </HStack>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialogOverlay>
-                      </AlertDialog>
-                    </Stack>
-                    <Button
-                      type="submit"
-                      colorScheme="blue"
-                      leftIcon={<MdSave size="20px" />}
-                      isLoading={updatePatientProps.loading}
-                    >
-                      Salvar informações
-                    </Button>
-                  </HStack>
-                </Stack>
-              </Collapse>
-            </Stack>
-          </HStack>
-        </form>
+        <PatientIdCard
+          patient={patient as IPatientExtEvaluations}
+          refetch={refetch}
+        />
         <Tabs
           isFitted
           variant="enclosed"
-          boxShadow={['base', 'md']}
-          borderRadius={{ base: 'none', sm: 'xl' }}
-          bgColor="rgb(255, 255, 255, 0.02)"
+          boxShadow={colorMode == 'light' ? ['base', 'md'] : undefined}
+          bgColor={colorMode == 'light' ? undefined : 'whiteAlpha.50'}
+          rounded={['none', 'md']}
           defaultIndex={parseInt(tabIndex as string) || 1}
           onChange={(index) =>
             router.push(`/patient/${id}?tabIndex=${index}`, undefined, {
@@ -671,14 +332,15 @@ const Patient = () => {
                 <Skeleton isLoaded={!loading}>
                   <Stack spacing={[4, 6]}>
                     {evaluations?.map(
-                      ({ node }: { node: ExtendedEvaulation }) => (
+                      ({
+                        node,
+                      }: {
+                        node: IEvaluationExtServiceCollaborator;
+                      }) => (
                         <Box
-                          ref={contentRef}
                           key={node.id}
-                          bgColor={evaluationCardBgColor}
-                          rounded="md"
-                          boxShadow={'base'}
-                          p={4}
+                          ref={contentRef}
+                          rounded={['none', 'md']}
                         >
                           <Stack spacing={4}>
                             <Heading as="h3" fontSize={'lg'}>
@@ -690,7 +352,14 @@ const Patient = () => {
                               </Badge>
                               {node.collaborator.fullName}
                             </Text>
-                            <Stack spacing={0} fontSize="sm">
+                            <Stack
+                              spacing={0}
+                              textColor={
+                                colorMode === 'light'
+                                  ? undefined
+                                  : 'whiteAlpha.700'
+                              }
+                            >
                               <Text as="i">
                                 Data da consulta:{' '}
                                 {new Date(node.createdAt).toLocaleString(
@@ -717,8 +386,8 @@ const Patient = () => {
 
                             <Box
                               p={4}
-                              boxShadow={['sm', 'base']}
-                              borderRadius={{ base: 'none', sm: 'xl' }}
+                              bgColor="whiteAlpha.50"
+                              rounded={['none', 'md']}
                             >
                               <ReactMarkdown components={ChakraUIRenderer()}>
                                 {node.content}
@@ -735,6 +404,17 @@ const Patient = () => {
                               </Button>
                             </HStack>
                           </Stack>
+                          <Box
+                            w="full"
+                            h={0.5}
+                            bgColor={
+                              colorMode === 'light'
+                                ? 'blackAlpha.50'
+                                : 'whiteAlpha.50'
+                            }
+                            rounded={['none', 'md']}
+                            my={4}
+                          />
                         </Box>
                       ),
                     )}
@@ -783,14 +463,15 @@ const Patient = () => {
                 <Skeleton isLoaded={!loading}>
                   <Stack spacing={[4, 6]}>
                     {evaluations?.map(
-                      ({ node }: { node: ExtendedEvaulation }) => (
+                      ({
+                        node,
+                      }: {
+                        node: IEvaluationExtServiceCollaborator;
+                      }) => (
                         <Box
                           ref={contentRef}
                           key={node.id}
-                          bgColor={evaluationCardBgColor}
-                          rounded="md"
-                          boxShadow={'base'}
-                          p={4}
+                          rounded={['none', 'md']}
                         >
                           <Stack spacing={4}>
                             <Heading as="h3" fontSize={'lg'}>
@@ -829,8 +510,8 @@ const Patient = () => {
 
                             <Box
                               p={4}
-                              boxShadow={['sm', 'base']}
-                              borderRadius={{ base: 'none', sm: 'xl' }}
+                              bgColor="whiteAlpha.50"
+                              rounded={['none', 'md']}
                             >
                               <ReactMarkdown components={ChakraUIRenderer()}>
                                 {node.content}
