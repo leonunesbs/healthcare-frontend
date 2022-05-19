@@ -41,7 +41,7 @@ import { useRouter } from 'next/router';
 
 const PATIENTS_QUERY = gql`
   query allPatients($fullName: String, $first: Int) {
-    allPatients(fullName_Icontains: $fullName, first: $first, offset: 0) {
+    allPatients(fullName_Icontains: $fullName, first: $first) {
       edges {
         node {
           id

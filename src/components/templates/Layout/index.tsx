@@ -32,7 +32,7 @@ const Layout = ({
         />
       </Head>
       {isHeaded && <Header />}
-      <Container maxW={'8xl'} minH="100vh">
+      <Container maxW={'8xl'} minH="100vh" px={['0', '4']}>
         <Box>{children}</Box>
       </Container>
       {isFooted && <Footer />}

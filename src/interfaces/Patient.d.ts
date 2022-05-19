@@ -1,3 +1,5 @@
+import { IEvaluationExtServiceCollaborator } from './Evaluation';
+
 export interface IPatient {
   id: string;
   fullName: string;
@@ -6,4 +8,12 @@ export interface IPatient {
   age: string;
   email: string;
   phone: string;
+}
+
+export interface IPatientExtEvaluations extends IPatient {
+  evaluations: {
+    edges: {
+      node: IEvaluationExtServiceCollaborator;
+    }[];
+  };
 }

@@ -26,7 +26,7 @@ const override: ThemeOverride = {
               position: 'absolute',
               backgroundColor: 'white',
               _dark: {
-                backgroundColor: 'gray.800',
+                backgroundColor: 'gray.900',
               },
               pointerEvents: 'none',
               mx: 3,

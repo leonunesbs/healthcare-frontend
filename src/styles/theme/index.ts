@@ -11,7 +11,7 @@ const config: ThemeConfig = {
 const overrides: ThemeOverride = {
   config,
   styles,
-  colors: colors,
+  colors,
   components: {
     Form,
   },

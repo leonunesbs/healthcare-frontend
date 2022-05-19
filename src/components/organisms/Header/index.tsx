@@ -35,23 +35,32 @@ const Header = ({ ...rest }: HeaderProps) => {
     <>
       <Container maxW="8xl" px={4} py={2} {...rest}>
         <HStack justify={'space-between'}>
-          <LinkBox
-            position={'relative'}
-            h={['3rem', '4rem', '5rem']}
-            w={['3rem', '4rem', '5rem']}
+          <Box>
+            <LinkBox
+              position={'relative'}
+              h={['3rem', '4rem', '5rem']}
+              w={['3rem', '4rem', '5rem']}
+            >
+              <CustomLink href="/">
+                <Image
+                  alt="logo"
+                  placeholder="blur"
+                  blurDataURL={useColorModeValue(
+                    '/ln-light.png',
+                    '/ln-dark.png',
+                  )}
+                  src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
+                  layout="fill"
+                  quality={100}
+                />
+              </CustomLink>
+            </LinkBox>
+          </Box>
+          <HStack
+            as="nav"
+            display={['none', 'none', 'block']}
+            spacing={[8, 10]}
           >
-            <CustomLink href="/">
-              <Image
-                alt="logo"
-                placeholder="blur"
-                blurDataURL={useColorModeValue('/ln-light.png', '/ln-dark.png')}
-                src={useColorModeValue('/ln-light.png', '/ln-dark.png')}
-                layout="fill"
-                quality={100}
-              />
-            </CustomLink>
-          </LinkBox>
-          <HStack as="nav" display={['none', 'block']} spacing={[8, 10]}>
             <Button
               variant={'ghost'}
               isActive={router.pathname === '/'}
@@ -119,7 +128,7 @@ const Header = ({ ...rest }: HeaderProps) => {
       <Box
         h="0.5"
         bg={useColorModeValue('gray.500', 'gray.200')}
-        mb={['4', '6']}
+        mb={[4, 4, 6]}
       />
     </>
   );

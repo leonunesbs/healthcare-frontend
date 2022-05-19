@@ -2,9 +2,29 @@ import { ThemeOverride } from '@chakra-ui/react';
 
 const override: ThemeOverride = {
   colors: {
+    gray: {
+      50: '#fafafa',
+      100: '#f5f5f5',
+      200: '#eeeeee',
+      300: '#e0e0e0',
+      400: '#bdbdbd',
+      500: '#9e9e9e',
+      600: '#757575',
+      700: '#616161',
+      800: '#424242',
+      900: '#212121',
+      999: '#121212',
+    },
     blue: {
       200: '#11BBEF', // Corresponds to #14A5DE
       500: '#155A84',
+    },
+    darkModeWhite: {
+      500: 'rgba(255, 255, 255, 0.5)',
+      600: 'rgba(255, 255, 255, 0.6)',
+      700: 'rgba(255, 255, 255, 0.7)',
+      800: 'rgba(255, 255, 255, 0.8)',
+      900: 'rgba(255, 255, 255, 0.9)',
     },
   },
 };
