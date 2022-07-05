@@ -56,7 +56,7 @@
     "@types/mermaid": "8.2.9",
     "@types/node": "16.11.27",
     "@types/nookies": "2.0.3",
-    "@types/react": "18.0.6",
+    "@types/react": "18.0.15",
     "@types/react-dom": "18.0.2",
     "@types/react-icons": "3.0.0",
     "@typescript-eslint/eslint-plugin": "5.20.0",
