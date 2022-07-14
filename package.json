@@ -33,7 +33,7 @@
     "@emotion/styled": "^11",
     "@uiw/react-md-editor": "3.6.0",
     "chakra-ui-markdown-renderer": "4.0.0",
-    "framer-motion": "^6",
+    "framer-motion": "6.5.1",
     "global": "4.4.0",
     "graphql": "16.4.0",
     "icloud-nosync-node": "1.0.2",
